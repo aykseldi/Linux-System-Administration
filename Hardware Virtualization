@@ -1,0 +1,169 @@
+Hardware Virtualization (Hardware Virt)
+
+Virtualization Manager
+
+
+  What is Hardware Virtualization?
+All sources of hardware are controlled by Hypervisor. Type 1 is Virtualization. If hypervisor does not work, virtual machines will not work.
+It comes with a type 1 hypervisor setup program. (It works itself) Hypervisor is not an operating system. We can install a virtual machine on it and then install an operating system. Vmware ESXI, Oracle VM, XEN
+
+Tip2 Hypervisor works on the hardware, the hypervisor works on it and the virtual machines are installed on the hypervisor. The operating system controls the system resources. VirtualBox, Hyper-V, Vmware WorkStation, Linux Kernel - >> Linux Kernel acts as a hypervisor itself.
+
+1.Insulation -> Whether AMD or Intel Cpu can be installed. It isolates the source of the virtual machine from a physical source.
+2.Source sharing
+3. Source standardization - (Vertical Isolation)
+
+If there is no need for source standardization, only isolation is needed, then process Virtualizatrion (Isolation) can be used using cgroup blah.
+  Some Virtualization Systems
+LXC - >> (Linux Containers)
+Docker
+openv2
+Solaris Zones (1970)
+
+  LXC Setup and Configuration
+We start with installing LXC first.
+sudo apt install lxc
+We first entered the following parameters in this file.
+root @ debian: # cat / etc / default / lxc-net
+USE_LXC_BRIDG to = "true"
+LXC_BRIDG to = "lxcbr0"
+LXC_ADD R = "10.0.10.1"
+LXC_NETMASK = "255.255.255.0"
+LXC_NETWORK = "10.0.10.0/24"
+LXC_DHCP_RANG to = "10.0.10.2,10.0.10.254"
+root @ debian: #
+We launched LXC-Net
+root @ debian: # systemctl restart lxc-net
+
+It shows the DHCP process and information that LXC has installed.
+root @ debian: # ps fauxwww | grep dnsmasq
+root 11578 0.0 0.0 6076 888 pts / 2 S + 03:22 0:00 | \ _ grep dnsmasq
+dnsmasq 11570 0.0 0.0 18012 352? S 03:20 0:00 dnsmasq -u dnsmasq --strict-order --bind-interfaces --pid-file = / run / lxc / dnsmasq.pid --listen-address 10.0.10.1 --dhcp-range 10.0. 10.2,10.0.10.254 --dhcp-lease-max = 253 --dhcp-no-override --except-interface = lo --interface = lxcbr0 --dhcp-leasefile = / var / lib / misc / dnsmasq.lxcbr0. leases --dhcp-authoritative
+
+root @ debian: # ip link
+8: lxcbr0: <NO-CARRIER, BROADCAST, MULTICAST, UP> mtu 1500 qdisc noqueue state DOWN mode DEFAULT group default qlen 1000
+    link / ether 00: 16: 3e: 00: 00: 00 brd ff: ff: ff: ff: ff: ff
+    
+The following commune shows the container list
+root @ debian: # lxc-ls -> Shows container list
+debian01
+
+We can also connect to the container with the console.
+root @ debian: / var / lib / lxc / debian01 # lxc-console -n debian01
+
+root @ debian: # lxc-ls --fancy
+NAME STATE AUTOSTART GROUPS IPV4 IPV6 UNPRIVILEGED
+debian01 RUNNING 0 - - - false
+
+root @ debian: / sys / fs / cgroup / memory / mem01 # lxc-stop --name debian01
+- >> The working container is stopped.
+
+  The main directory of the LXC is below.
+root @ debian: # ls / var / lib / lxc / debian01 / rootfs /
+
+In the LXC
+root @ debian: # lxc-start --name debian01
+root @ debian: # lxc-attach --name debian01
+
+root @ debian01: ~ # touch /experiment.txt - >> \ I created a file in the container
+
+root @ debian: ~ # lxc-attach --name debian01 - touch /deneme01.txt
+have a thousand dev home lib64 mnt proc run srv tmp
+boot etc lib media opt root sbin sys usr
+
+root @ debian: / var / lib / lxc / debian01 / rootfs # pwd
+/ Var / lib / LXC / debian01 / rootfs
+
+We can also run commands from outside the container. If we don't command it will run directly.
+lxc-attach --name debian01 - touch /deneme01.txt
+
+We installed the iputils package in the container
+root @ debian01: ~ # apt install psmisc iputils-ping
+root @ debian01: ~ # apt install procps
+
+If command is run from the container, it only sees its own processes.
+ps fauxwww -
+
+For example, an index is created for each container at lxc and below, as follows. In this way, we can set each container as 1 GB of mem or restrict all containers to 10 GB of ram in total.
+
+/ Sys / fs / CGroup / memory / LXC / debian01
+  LXC Images
+So where does lxc-create -n debian01 -download get the container image from.
+
+ aty @ debian: / sys / fs / cgroup / memory / lxc / debian01 $ cd / usr / share / lxc / templates /
+ aty @ debian: / usr / share / lxc / templates $ ls -la
+-rwxr-xr-x 1 root root 18155 Apr 14 09:46 lxc-download
+
+- >> Looks at the download file above. The download file has the required configuration for the container.
+
+When LXC downloads, it downloads the following files to cache. When we say LXC destroy, cache does not get infected, only the file under var / lib / lxc / container_name is deleted.
+
+aty @ debian: / var / cache / lxc / download / debian / buster / amd64 / default $ pwd
+/ Var / cache / LXC / download / debian / Buster / amd64 / default
+aty @ debian: / var / cache / lxc / download / debian / buster / amd64 / default $ ls -la
+total 85 644
+drwxr-xr-x 2 root root 4096 Jul 20 18:48.
+drwxr-xr-x 3 root root 4096 Jul 20 18:48 ..
+-rw-r - r-- 1 root root 15 Jul 20 18:48 build_id
+-rw-r - r-- 1 root root 65 Jul 20 01:25 config
+-rw-r - r-- 1 root root 72 Jul 20 01:25 config.1
+-rw-r - r-- 1 root root 72 Jul 20 01:25 config.2nd
+-rw-r - r-- 1 root root 72 Jul 20 01:25 config.3
+-rw-r - r-- 1 root root 72 Jul 20 01:25 config.4
+-rw-r - r-- 1 root root 111 Jul 20 01:25 config-user
+-rw-r - r-- 1 root root 125 Jul 20 01:25 config-user.1
+-rw-r - r-- 1 root root 125 Jul 20 01:25 config-user.2
+-rw-r - r-- 1 root root 125 Jul 20 01:25 config-user.3
+-rw-r - r-- 1 root root 125 Jul 20 01:25 config-user.4
+-rw-r - r-- 1 root root 164 Jul 20 01:25 create-message
+-rw-r - r-- 1 root root 81 Jul 20 01:25 excludes-user
+-rw-r - r-- 1 root root 11 Jul 20 01:25 expiry
+-rw-r - r-- 1 root root 87626700 Jul 20 01:35 rootfs.tar.xz
+-rw-r - r-- 1 root root 25 Jul 20 01:25 templates
+
+We have our lxc container on another machine in another linux machine
+We can do this by moving the file / var / lib / lxc / container_name.
+
+/ usr / share / lxc / templates - >> There are scripts such as centos, ubuntu in the folder and we can set up ubuntu container by passing these parameters. However, if we want to establish a centos for example, we need to install yum on debian. The important thing here is that the lxc version is the same for another machine we will install.
+
+The config file of the container. If I am going to carry a container to another machine, I have to look at this file.
+
+root @ debian: / var / lib / lxc / debian01 # man lxc.container.conf
+- >> In the file, it writes in detail the setting parameters and how to export them.
+
+https://linuxcontainers.org/lxc/manpages/man5/lxc.container.conf.5.html
+
+root @ debian: ~ # cd / var / lib / lxc / debian01 /
+root @ debian: / var / lib / lxc / debian01 # more config
+# Template used to create this container: / usr / share / lxc / templates / lxc-download
+# Parameters passed to the template:
+# Template script checksum (SHA-1): 273c51343604eb85f7e294c8da0a5eb769d648f3
+# For additional config options, please look at lxc.container.conf (5)
+
+# Uncomment the following line to support nesting containers:
+# lxc.include = /usr/share/lxc/config/nesting.conf
+# (Be aware this has security implications)
+
+
+# Distribution configuration
+lxc.include = /usr/share/lxc/config/common.conf
+lxc.arch = linux64
+
+# Container specific configuration
+lxc.apparmor.profile = generated
+lxc.apparmor.allow_nesting = 1
+lxc.rootfs.path = dir: / var / lib / lxc / debian01 / rootfs
+lxc.uts.name = debian01
+
+# Network configuration
+lxc.net.0.type = veth
+lxc.net.0.link = lxcbr0
+lxc.net.0.flags = up
+
+The following file can be restricted to all containers in common, but if we consider the container to its own conff file, this common file will be override.
+/usr/share/lxc/config/common.conf
+The container can be restricted in what it can do itself.
+
+  LXC or Docker?
+How many applications will work in the container? If more than one application will run, LXC makes sense, but if only one application will run, Docker makes more sense.
+When we make ps -fe in the container, we see that many processes are running.
