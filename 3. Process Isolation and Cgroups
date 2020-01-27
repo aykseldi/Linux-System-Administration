@@ -1,0 +1,101 @@
+What are Cgroups?
+Cgroups (Control Groups, Control Groups); It is a feature of the Linux kernel that helps to limit and isolate the usage of resources such as processor, system memory, network, bandwidth by clustering processes. Using Cgroups, system administrators can prioritize, block between tasks and users, and make the use of system resources more efficient.
+
+We can list the objects that we can control on the control groups as follows.
+[root @ localhost ~] # ll / sys / fs / cgroup /
+total 0
+drwxr-xr-x. 2 root root 0 Jul 20 04:03 blkio
+lrwxrwxrwx. 1 root root 11 Jul 20 04:03 cpu -> cpu, cpuacct
+lrwxrwxrwx. 1 root root 11 Jul 20 04:03 cpuacct -> cpu, cpuacct
+drwxr-xr-x. 2 root root 0 Jul 20 04:03 cpu, cpuacct
+drwxr-xr-x. 2 root root 0 Jul 20 04:03 cpuset
+drwxr-xr-x. 4 root root 0 Jul 20 04:03 devices
+drwxr-xr-x. 2 root root 0 Jul 20 04:03 freezer
+drwxr-xr-x. 2 root root 0 Jul 20 04:03 hugetlb
+drwxr-xr-x. 2 root root 0 Jul 20 04:03 memory
+lrwxrwxrwx. 1 root root 16 Jul 20 04:03 net_cls -> net_cls, net_prio
+drwxr-xr-x. 2 root root 0 Jul 20 04:03 net_cls, net_prio
+lrwxrwxrwx. 1 root root 16 Jul 20 04:03 net_prio -> net_cls, net_prio
+drwxr-xr-x. 2 root root 0 Jul 20 04:03 perf_event
+drwxr-xr-x. 2 root root 0 Jul 20 04:03 pids
+drwxr-xr-x. 4 root root 0 Jul 20 04:03 systemd
+
+  Cgroup Components
+blkio - >> It can limit how much data a process can read and write per second.
+Controls access of running processes to io devices. Disc is meant from io or block devices. In other words, how fast it can read and write data from disk can be controlled.
+
+Cpu - >> It may limit the amount of cpu the process can use.
+
+cpuset - >>> We can change which CPUs the process can work on, or say which CPU is working at that time.
+
+memory - >> Displays and restricts the amount of ram and swap that the process will use
+
+freezer - >> Processin controls like start and stop. The virtualization of virtual machines is done by this method.
+
+  Libcgroup-Tools Package
+We have installed cgroup tools, we have installed a package that we will manage cgroups more easily.
+[root @ localhost cgroup] # yum install libcgroup-tools
+
+Indicates in which cpular processes are running.
+[root @ localhost cpuset] # cat /sys/fs/cgroup/cpuset/cpuset.cpus
+0
+ Since the Centos repo is old, we set up the epel repo
+ yum install -y epel-release
+ 
+  Stress Package
+ We installed the stress package to create a virtual load on the machine.
+ yum install -y stress
+  
+ stress -c 1 - >> I gave 1 because there is only one CPU in my machine. Stress created me a process that uses 100% of the CPU.
+ 
+ top - 06:03:53 up 2:00, 6 users, load average: 0.98, 0.50, 0.23
+Tasks: 113 total, 3 running, 110 sleeping, 0 stopped, 0 zombie
+Cpu0: 100.0 us, 0.0 sy, 0.0 ni, 0.0 id, 0.0 wa, 0.0 hi, 0.0 si, 0.0 st
+KiB Mem: 1014972 total, 522044 free, 128716 used, 364212 buff / cache
+KiB Swap: 1134588 total, 1134588 free, 0 used. 707576 avail Mem
+
+The reason why it can use all cpu in this way is cpu
+
+  PID USER PR NI VIRT RES SHR S% CPU% MEM TIME + COMMAND
+12500 root 20 0 7 308 100 0 R 92.4 0.0 1: 45.17 stress
+
+  Creating a Cgroup Child Object
+Under the cgroup, we created a subgroup under the cpuset directory called experiment, where we can set up to limit cpu usage. The experiment group inherits the settings in the parent directory.
+cgcreate -g cpuset: / try
+We created a group called an experiment under the / sys / fs / cgroup / cpuset directory.
+
+Each control group operates hierarchically within itself. When they create a test group in the cpuset directory, they use the values ​​in the parent directory.
+
+Cpuset.cpu -> 0 1 in the home directory
+The same occurs by default in the test directory. However, as we go down to the subdirectory, we can enter different restrictions. So we can arrange to use 1 cpu instead of 2 cpu.
+
+echo "0" | tee /sys/fs/cgroup/cpuset/deneme/cpuset.cpus - >> We restricted the cpuset.cpus part in the experiment to use the first cpu.
+
+[root @ localhost trial] # echo "0" | tee /sys/fs/cgroup/cpuset/deneme/cpuset.mems
+0
+[root @ localhost trial] # more cpuset.mems
+0
+
+We can say which processes will be included in this cgroup in the task file. Process id must be given here.
+For example, if we export the bash process into the experiment cgroup, the bash process will create (create) other processes in the trial cgroup.
+ 
+ echo $$ - >> Returns the id of the Bash process
+ 
+ Its sources can be isolated from each other as well as restricted. These are done through cgroup.
+ 
+If we create a directory by saying mkdir in / sys / fs / cgroup / memory /, it prepares the necessary files by itself.
+
+With the command below, the bash process will run in the memory subdirectory named mem01.
+root @ debian: / sys / fs / cgroup / memory / mem01 # echo $$ | tee / sys / fs / cgroup / memory / mem01 / tasks
+10708
+
+We set a 512 MB memory limit with this command. Already in our bash shell inide mem01
+We took in.
+root @ debian: / sys / fs / cgroup / memory / mem01 # echo $ ((512 * 1024 * 1024)) | tee /sys/fs/cgroup/memory/mem01/memory.limit_in_bytes
+536870912
+
+We created a process that wanted to use 1G memory with the command, but we created it with the ball but it can only use 512M because we enter the value of memory.limit_in_bytes.
+
+stress -m 1 --vm-bytes 1g --vm-hang 5
+Ball output% MEM
+11428 root 20 0 1052 528 519832 268 R 69.4 52.7 1: 01.80 stress
