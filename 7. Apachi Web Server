@@ -1,0 +1,265 @@
+What works on the CLient side? What works on the server side?
+If it can work directly on the client without putting something on the server, these are the applications running on the client.
+Html, css, javascript, java applets, adobe flash
+The server side employees are php, java, diango, ruby
+
+Browsers can also interpret the page rendered by the servers differently. Supporting some of the css files, such as activeX support ...
+
+The technologies used are limited as the client side is not under our control.
+  What does SSL do?
+Https connection instead of http
+443 - >> Secure http
+With http connection, we can see where and which web page we are connecting to. Content is also seen.
+
+With https, it is only possible to know where we connect. The content is more secure because it is encrypted with SSL.
+
+The browser contains a list of publishers that produce SSL certificates.
+
+SSL Connection
+1. The client tells the server the encryption algorithms it can decode.
+2. The server generates and sends the key to one of the encryption algorithms specified by the client.
+3. Communication with the client is now initiated over this key.
+
+Certificate is actually a knowledge of chemistry.
+Thanks to the SSL certificate of Garanti.com.tr, I am really Garanti.com.tr and this is my identity document.
+In the hands of the client, there is an identity list showing who is what. The client decides that he is safe, looking at his own hand and what the server shows.
+It is important to which authority the certificate is signed. Authority vouches for authenticity.
+
+Why is SSL server run?
+For example, there is a server side SSL server. The SSL key generated on the server side is put on the client.
+SSL key is stored on the client side. The client connects to the server with this switch. On the client side, the server is added to known hosts.
+
+
+A client connected to a server, clicked on a page. Then he clicked on another page. So how does the server know that it shows the other page to the same user?
+
+Http stateless is a protocol. In terms of http, each request is independent of each other.
+In this case, the server must send some tokens to the user. One id is produced. These are mutually shared. These can only be changed on the client side.
+On the server side, things such as id (token), browser information, and the latest token generation date are checked to see if the incoming client is the same person.
+The server goes and sends a token to the client's computer. The server also holds this token on its side.
+
+
+Google Analytics says that so many unique users are connected to a site, according to what?
+The user is also referred to the metadata of the page (previous site page information). makes a guess by looking at them.
+
+What is the difference between GET and POST method?
+We can bookmark with get and the site taken with the get method goes to the same place every time.
+In the post method, no information is sent over the url .;
+*** If the variables are personal information, it is sent by get instead of post, personal information (username, password, etc.) appears.
+*** The web server also includes a url in its own logs. Therefore, since the variables that come with the get method are part of the url, personal information may appear in the logs.
+
+
+  Apachi Server Installation and Configuration
+Where do we find the settings for Apache (config)?
+
+[aty @ centos7 ~] $ rpm -qc httpd
+
+/etc/httpd/conf.d/autoindex.conf
+/etc/httpd/conf.d/userdir.conf
+/etc/httpd/conf.d/welcome.conf
+/etc/httpd/conf.modules.d/00-base.conf
+/etc/httpd/conf.modules.d/00-dav.conf
+/etc/httpd/conf.modules.d/00-lua.conf
+/etc/httpd/conf.modules.d/00-mpm.confd
+/etc/httpd/conf.modules.d/00-proxy.conf
+/etc/httpd/conf.modules.d/00-systemd.conf
+/etc/httpd/conf.modules.d/01-cgi.conf
+/etc/httpd/conf/httpd.conf
+/ Etc / httpd / conf / magic
+/etc/logrotate.d/httpd
+/ Etc / sysconfig / htcacheclean
+/ Etc / sysconfig / httpd
+
+
+In Debian, dpkg -config
+
+[aty @ centos7 ~] $ sudo ps -fe | grep httpd | wc -l
+10
+
+Apache is a modular system. The less modules consume the less memory. and we can meet so many users.
+  Apachi Modules
+In general, the modules are dynamically embedded and can be removed with settings.
+[aty @ centos7 conf.d] $ httpd -l
+Compiled in modules:
+  core.c
+  mod_so.c
+  http_core.c
+
+When you add a module to Apache, it is necessary to enter here.
+/etc/httpd/conf/httpd.conf
+For example, when I want to delete a package install
+
+When you say Remove, it removes the settings files that come with the module from /etc/httpd/conf.d.
+
+On the server side, if I change a setting file, the service should be reloaded instead of turning it off completely, but this does not always work.
+For example, when adding and removing modules to apache, the binaries should be compiled and the service should be restarted.
+
+Apache Sample Modules
+mod_dav - >> File sharing over http
+
+mod_deflate - >> The module that compresses the file on the server side and opens it automatically on the client side.
+
+mod_ldap --- >> Ldap provides authentication. For example, by autenticating a file with ldap, it enables people to receive it.
+
+mod_speling - >> In the page urlprovides automatic correction of misspellings.
+
+mod_substitute - >> Filters an output produced by the application and provides the possibility to correct it as we wish
+
+mod_userdir - >> Shows users their home directories on the server.
+
+mod_usertrack - >> Places a cookie
+
+mod_pagespeed: Web optimization
+
+mod_security: Security, like WAF, can be used like F5
+
+suhosin: PHP Security
+
+mod_php: PHP Language
+
+mod_wsgi: Python
+
+mod_perl: Perl
+
+mod_jk: Servlet
+ 
+  Adding Modules to Apache
+
+[aty @ centos7 conf.modules.d] $ ll /etc/httpd/conf.modules.d/
+28 total
+-rw-r - r--. 1 root root 3739 Apr 24 09:44 00-base.conf
+-rw-r - r--. 1 root root 139 Apr 24 09:44 00-dav.conf
+-rw-r - r--. 1 root root 41 Apr 24 09:44 00-lua.conf
+-rw-r - r--. 1 root root 742 Apr 24 09:44 00-mpm.conf
+-rw-r - r--. 1 root root 957 Apr 24 09:44 00-proxy.conf
+-rw-r - r--. 1 root root 88 Apr 24 09:44 00-systemd.conf
+-rw-r - r--. 1 root root 451 Apr 24 09:44 01-cgi.conf
+ 
+The module is enabled when we restart the service by going to the /etc/httpd/conf.modules.folder and removing a module commented with a pound.
+
+Installing OPEN-SSL
+1. First I installed mod ssl
+ sudo yum install mod_ssl
+ 2. The result of this produced a separate module file
+ [aty @ centos7 ~] $ grep -c ssl /etc/httpd/conf.modules.d/*.conf
+/etc/httpd/conf.modules.d/00-base.conf:0
+/etc/httpd/conf.modules.d/00-dav.conf:0
+/etc/httpd/conf.modules.d/00-lua.conf:0
+/etc/httpd/conf.modules.d/00-mpm.conf:0
+/etc/httpd/conf.modules.d/00-proxy.conf:0
+/etc/httpd/conf.modules.d/00-ssl.conf:1
+/etc/httpd/conf.modules.d/00-systemd.conf:0
+/etc/httpd/conf.modules.d/01-cgi.conf:0
+
+3. [aty @ centos7 ~] $ sudo httpd -M | grep ssl
+ ssl_module (shared)
+ 
+4. Service was restarted.
+ sudo systemctl restart httpd.service
+ 
+ (Note, since I have NAT forwarding, I entered the forwarding rule in the virtual box to go to the htttps service running from my own host machine on the virtual machine.
+ Main Machine 8082 Virtual MAkina 443)
+ 
+ 
+ SSL setting
+ One
+ We create our SSL private key and public key.
+
+With the LetsEncrypt project, it generates an SSL certificate without receiving money.
+
+Where does my web page work?
+[aty @ centos7 ~] $ sudo grep Document /etc/httpd/conf/httpd.conf
+# DocumentRoot: The directory out of which you will serve your
+DocumentRoot "/ var / www / html"
+    # access content that does not live under the DocumentRoot.
+#ErrorDocument 500 "The server made a boo boo."
+#ErrorDocument 404 /missing.html
+#ErrorDocument 404 "/cgi-bin/missing_handler.pl"
+#ErrorDocument 402 http://www.example.com/subscription_info.html
+
+
+We added the php module.
+sudo yum install php
+
+then we created a php file.
+[aty @ centos7 ~] $ more /var/www/html/index.php
+<? Php
+echo "Hello";
+ ?>
+
+Then we went directly to the site.
+Hi
+
+It is necessary to examine the conf files created by the installed module so that we can better understand what the module does.
+
+  Virtual Hosting in Apachi
+Virtuak Hosting is used to hold more than one host on the same server.
+
+2. virtual host will be defined.
+I will test an address in my local
+kayit.linux.org.t is
+kamp.linux.org.t is
+
+1. I created 2 index htlm. One of them will register, and the other will show the camp linux page.
+[aty @ centos7 ~] $ sudo vim /var/www/kayitlinux.com/index/index.html
+[aty @ centos7 ~] $ sudo vim /var/www/kamplinux.com/index/index.html
+
+2. I created the Konf files
+ sudo vim /etc/httpd/conf.d/kayit.com.conf
+ 
+ <VirtualHost *: 80>
+ ServerName localhost
+ ServerAlias ​​www.kayitlinux.com
+ DocumentRoot /var/www/kayitlinux.com/index/
+</ VirtualHost>
+
+  sudo vim /etc/httpd/conf.d/kamp.com.conf
+
+<VirtualHost *: 80>
+ ServerName 192.168.43.163
+ ServerAlias ​​www.kamplinux.com
+ DocumentRoot /var/www/kayitlinux.com/index/
+</ VirtualHost>
+
+
+3. I entered the main file's etc / hosts file
+127.0.0.1 www.kamplinux.com
+127.0.0.1 www.kayitlinux.com
+
+4. I restart the service.
+sudo systemctl restart httpd
+
+5. From the main machine
+http://www.kamplinux.com:8081/
+http://www.kayitlinux.com:8081/
+
+PROXY Server
+For example, when going to hürriyet.com, we first put a proxy server. The first time, he goes to freedom and takes the page, but when someone tries to get it again, it does not connect to freedom com and instead the proxy server gives the web page from its cache.
+
+  Reverse Proxy
+There is an apachi server at the front, some services are running at the back.
+On the front, everyone comes to apachi for security tightening. Connectors come to apache with ssl and communicate with services on the back without apache ssl.
+
+You can go to apachi for reverse proxy, get the data from the service, data can be given to the client directly by apachi without dealing with the service.
+
+Operations for reverse proxy on Apachi server
+1. We have prepared 2 websites before. Now the apache server will forward the request to them to an address we want.
+
+For this, the conff file I created below
+
+ I entered the following parameters.
+***
+ProxyRequests On
+ProxyPass / http://www.google.com
+ProxyPassReverse / http://wwww.google.com
+****
+Konf dosyasının son hali:
+
+[aty@centos7 ~]$ sudo more /etc/httpd/conf.d/kamp.com.conf
+<VirtualHost *:80>
+ServerName localhost
+ServerAlias www.kamplinux.com
+DocumentRoot /var/www/kamplinux.com/index/
+ProxyRequests On
+ProxyPass / http://www.google.com
+ProxyPassReverse / http://wwww.google.com
+</VirtualHost>
