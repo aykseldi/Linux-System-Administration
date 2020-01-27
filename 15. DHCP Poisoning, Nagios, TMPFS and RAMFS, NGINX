@@ -1,0 +1,63 @@
+DHCP -> Works on 2nd Layer (Data).
+DHCP poisoning
+FIFO rule is valid in the local network. For example, the time for a client to go to the Dhcp server is 20 ms via the switch.
+If there is a poisoned Dhcp server and the client's time to go to this Dhcp server is 10 ms, the poisened Dhcp can give the clienta ip.
+In this case, poisoned Dhcp clienta can give rope and gateway. In this case, the client logs on to the internet through this gateway, and for example, it receives the password with its fake facebook page and then can direct it to the original facecbook page.
+To prevent this, my dhcp broadcasts are made from the 24th port on the switch, and we can say that this port does not make any external dhcp broadcasts.
+
+
+
+Nagios
+It is a monitoring application. There are several alarming mechanisms. Disk fullness, CPU, memory, uptime etc. follows the parameters.
+The data received over snmp is realized data.
+
+
+
+TMPFS and RAMFS
+In places where high IO will occur, we can give an area from memory like a disk. In this way, it can be used in systems not working in memory to increase performance.
+
+A sqlite database is not standing with a deamon like other databases. He answers when we ask. For example, if we are working on sd card in arm processors, we can give tmpfs and ramfs. However, if electricity goes out, this data will be lost, it is not persistent.
+
+
+nginx
+It has Web server and Reverse Proxy feature.
+Things that are not in the base repo are included in the EPEL repos. EPEL -> Extra Packages Enterprise Linux
+
+Basic configuration file
+[aty @ ldap ~] $ vim /etc/nginx/nginx.conf
+
+
+user nginx;
+worker_processes auto; -> How many kernels, it opens up. We can restrict this.
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+# Load dynamic modules. See /usr/share/nginx/README.dynamic.
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024; -> 1024x8 opens if I run 8 threads
+}
+
+
+
+[aty @ ldap conf.d] $ ls -la /etc/nginx/conf.d/
+total 4
+
+
+How to Connect Application from UNIX Socket?
+We can check our current unix sockets with the command below.
+
+[aty @ ldap conf.d] $ netstat -anp | grep unix
+(No info could be read for "-p": geteuid () = 1000 but you should be root.)
+unix 2 [] DGRAM 15362 - /var/run/chrony/chronyd.sock
+unix 2 [ACC] STREAM LISTENING 14595 - /var/run/rpcbind.sock
+unix 2 [ACC] STREAM LISTENING 14607 - / run / dbus / system_bus_socket
+unix 2 [ACC] STREAM LISTENING 16664 - / var / run / NetworkManager / private-dhcp
+unix 2 [ACC] STREAM LISTENING 19266 - private / tlsmgr
+unix 2 [ACC] STREAM LISTENING 19269 - private / rewrite
+unix 2 [] DGRAM 12088 - / run / systemd / shutdownd
+unix 2 [ACC] STREAM LISTENING 19259 - public / cleanup
+unix 2 [ACC] STREAM LISTENING 19262 - public / qmgr
+unix 2 [ACC] STREAM LISTENING 19284 - public / flush
+unix 2 [ACC] SEQPACKET LISTENING 12146 - / run / udev / control
