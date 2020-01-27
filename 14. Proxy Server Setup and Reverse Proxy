@@ -1,0 +1,122 @@
+Proxy Server
+
+dhcp
+
+Proxy
+
+
+10.10.10.0/24
+
+Proxy
+Proxy runs on port 3128.
+Normal or transparent proxy can cache traffic going through port 80. Because it is encrypted with ssl, it cannot cach the data, that is, it cannot make sense of the data.
+Filtering at layer 7 level can be done with proxy.
+
+SSL operations can put a serious load on the CPU. So it can even set up a separate server for SSL certificate transactions.
+
+The proxy system is an old technology, they have now taken this caching job on the scanners.
+
+We can also configure a proxy server on the firewall. In this case, the destination of our firewalla is the external rope and we make Transparent Proxy by forwarding the requests with tcp = 80 port to 127.0.0.1:3128.
+
+In order to prevent traffic, for example, to avoid using any DNS other than my own DNS server, I can say that firewalla pass packets that go to port 53 which is my own DNS server, drop the others.
+The disks of proxy servers need to be fast, because they will need a lot of read and write io.
+
+Squid -> Proxy
+Squid is a caching proxy for the Web supporting HTTP, HTTPS, FTP, and more. It reduces bandwidth and improves response times by caching and reusing frequently-requested web pages. Squid has extensive access controls and makes a great server accelerator. It runs on most available operating systems, including Windows and is licensed under the GNU GPL
+
+With Squid, we can have LDAP verification or any verification done.
+[aty @ ldap ~] $ sudo yum install squid.x86_64
+
+[aty @ ldap ~] $ ls -la / etc / squid /
+total 60
+drwxr-xr-x 2 root root 192 Aug 1 06:16.
+drwxr-xr-x. 82 root root 8192 Aug 1 06:16 ..
+-rw-r - r-- 1 root squid 692 Jan 29 2019 cachemgr.conf
+-rw-r - r-- 1 root root 692 Jan 29 2019 cachemgr.conf.default
+-rw-r - r-- 1 root root 1817 Jan 29 2019 errorpage.css
+-rw-r - r-- 1 root root 1817 Jan 29 2019 errorpage.css.default
+-rw-r - r-- 1 root root 12077 Jan 29 2019 mime.conf
+-rw-r - r-- 1 root root 12077 Jan 29 2019 mime.conf.default
+-rw-r ----- 1 root squid 2315 Jan 29 2019 squid.conf
+-rw-r - r-- 1 root root 2315 Jan 29 2019 squid.conf.default
+
+[aty @ ldap ~] $ sudo vim /etc/squid/squid.conf
+
+aty @ ldap ~] $ man htpasswd -> simplest password authentication method
+
+[aty @ ldap ~] $ sudo htpasswd -c / etc / squid / squid_passwd aty -> This way a passwd file is created and adds the password of the aty user here.
+
+[aty @ ldap ~] $ sudo vim /etc/squid/squid.conf
+
+I run squid with the command below.
+
+[aty @ ldap ~] $ sudo systemctl status squid
+● squid.service - Squid caching proxy
+   Loaded: loaded (/usr/lib/systemd/system/squid.service; disabled; vendor preset: disabled)
+   Active: active (running) since Thu 2019-08-01 06:56:17 EDT; 7min ago
+  Process: 2425 ExecStart = / usr / sbin / squid $ SQUID_OPTS -f $ SQUID_CONF (code = exited, status = 0 / SUCCESS)
+  Process: 2420 ExecStartPre = / usr / libexec / squid / cache_swap.sh (code = exited, status = 0 / SUCCESS)
+ Main PID: 2427 (squid)
+   CGroup: /system.slice/squid.service
+           ├─2427 / usr / sbin / squid -f /etc/squid/squid.conf
+           292429 (squid-1) -f /etc/squid/squid.conf
+           └─2430 (logfile-daemon) /var/log/squid/access.log
+
+Aug 01 06:56:17 ldap.ali.net systemd [1]: Starting Squid caching proxy ...
+Aug 01 06:56:17 ldap.ali.net systemd [1]: Started Squid caching proxy.
+Aug 01 06:56:17 ldap.ali.net squid [2427]: Squid Parent: will start 1 kids
+Aug 01 06:56:17 ldap.ali.net squid [2427]: Squid Parent: (squid-1) process 2 ... d
+Hint: Some lines were ellipsized, use -l to show in full.
+
+This is how traffic logs flowing over Squid.
+sudo tail -300f /var/log/squid/access.log
+
+1564657540.852 261172 192.168.43.163 TCP_TUNNEL / 200 294 CONNECT fonts.gstatic.com:443 - HIER_DIRECT / 216.58.206.195 -
+1564657540.861 261167 192.168.43.163 TCP_TUNNEL / 200 294 CONNECT fonts.gstatic.com:443 - HIER_DIRECT / 216.58.206.195 -
+1564657540.862 260934 192.168.43.163 TCP_TUNNEL / 200 294 CONNECT fonts.gstatic.com:443 - HIER_DIRECT / 216.58.206.195 -
+1564657540.862 260946 192.168.43.163 TCP_TUNNEL / 200 294 CONNECT fonts.gstatic.com:443 - HIER_DIRECT / 216.58.206.195 -
+1564657540.862 260863 192.168.43.163 TCP_TUNNEL / 200 294 CONNECT fonts.gstatic.com:443 - HIER_DIRECT / 216.58.206.195 -
+1564657540.862 260893 192.168.43.163 TCP_TUNNEL / 200 294 CONNECT fonts.gstatic.com:443 - HIER_DIRECT / 216.58.206.195 -
+1564657540.866 260809 192.168.43.163 TCP_TUNNEL / 200 294 CONNECT fonts.gstatic.com:443 - HIER_DIRECT / 216.58.206.195 -
+1564657541.392 260737 192.168.43.163 TCP_TUNNEL / 200 4019 CONNECT googleads.g.doubleclick.net:443 - HIER_DIRECT / 216.58.206.162 -
+1564657541.446 260776 192.168.43.163 TCP_TUNNEL / 200 3741 CONNECT static.doubleclick.net:443 - HIER_DIRECT / 216.58.206.166 -
+1564657542.247 260713 192.168.43.163 TCP_TUNNEL / 200 6461 CONNECT yt3.ggpht.com:443 - HIER_DIRECT / 216.58.206.193 -
+1564657542.444 260906 192.168.43.163 TCP_TUNNEL / 200 76362 CONNECT i.ytimg.com:443 - HIER_DIRECT / 172.217.169.150 -
+1564657542.448 263760 192.168.43.163 TCP_TUNNEL / 200 553606 CONNECT www.youtube.com:443 - HIER_DIRECT / 172.217.169.110 -
+1564657543.450 263768 192.168.43.163 TCP_TUNNEL / 200 294 CONNECT fonts.gstatic.com:443 - HIER_DIRECT / 216.58.206.195 -
+1564657543.461 263785 192.168.43.163 TC
+
+
+REVERSE PROXY
+Reverse Proxy Systems
+Apache
+Written in Nginx -> C. Its digital footprint is smaller, not big and bulky like Apache.
+Both a web server
+Can reverse proxy for IMAP and POP2.
+HA-Proxy
+Envoy
+
+App1 | I www.lale.co
+|
+App1
+Reverse
+App2 Proxy satis.lale.com
+|
+
+app2 | I fatura.lale.co
+
+App3 |
+
+App3 site1 site1
+
+It is a place where internet access mechanisms are set up. We send the sites coming to lale.com to site1 and site2. However, satis.lale.com and bill.lale.com can redirect to app1 and app2 servers.
+SSL termination is done on the reverse proxy side.
+If the application holds session information, it must be either a central session management or a sticky session.
+Alternatives abound in session management.
+
+
+The constraint of http 1.1?
+With http 1.1, we can give 3 sessions in a single domain. For this reason, when we open sites like google, youtube from firefox in debug mode, we see a lot of subdomains. The reason for this is the limitation of http 1.1.
+If we do not act like this, the speed of the site or application will be seriously affected.
+
+When 1024 connections are opened to one web server, we can meet 1024/4 -> 256 real people in total. In order to meet more users, a subdomain for static content and other subdomains for other contents must be made.
