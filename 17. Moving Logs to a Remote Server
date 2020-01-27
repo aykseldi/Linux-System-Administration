@@ -1,0 +1,49 @@
+SENDING THE LOGS TO THE REMOTE SERVER
+After logs have entered ip and port information to a remote machine, we can send the logs.
+If possible, it is necessary to send them over a separate interface.
+Internal communication with Eth0
+Logs can be sent with Eth1.
+ 
+[aty @ ldap conf.d] $ yum info rsyslog
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirror.hosting.com.tr
+ * epel: ftp.arnes.si
+ * extras: mirror.nexsoft.com.tr
+ * updates: mirror.hosting.com.tr
+Installed Packages
+Name: rsyslog
+Arch: x86_64
+Version: 8.24.0
+Release: 34.el7
+Size: 1.9 M
+Repo: installed
+From repo: anaconda
+Summary: Enhanced system logging and kernel message trapping daemon
+URL: http://www.rsyslog.com/
+License: (GPLv3 + and ASL 2.0)
+Description: Rsyslog is an enhanced, multi-threaded syslog daemon. It
+            : supports MySQL, syslog / TCP, RFC 3195, permitted sender lists,
+            : filtering on any message part, and fine grain output format
+            : control. It is compatible with stock sysklogd and can be used
+            : as a drop-in replacement. Rsyslog is simple to set up, with
+            : advanced features suitable for enterprise-class,
+            : encryption-protected syslog relay chains.
+
+
+GrayLog is about logging
+
+It is recommended to install a minimum of 3 nodes.
+
+GrayLog itself comes with MongoDb.
+It is useful to do it without virtualization for GrayLog. Here it is on 6 machines.
+Here, full text searches are not performed on Mongolar, searches are made with Elastic Search.
+
+
+ElasticSearch1 <----------> Gray1 Mongo
+
+ElasticSearch1 <----------> Gray2 Mongo
+
+ElasticSearch1 <----------> Gray3 Mongo
+
+We can keep the Log of the application, the Log of the Operating System, the Database or even the queries in the Database. It is integrated with Grafana.
