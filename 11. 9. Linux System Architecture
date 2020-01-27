@@ -1,0 +1,206 @@
+Linux System Structure
+
+Installer
+|
+Installer-package man
+|
+Conf Files
+|
+App - App - App
+|
+Kernel
+
+Linux From Scratch: Completing your own Linux Machine according to your needs
+It is a project aiming to stand up.
+Linux from Scratch -> Linux From Scratch (LFS) is a project that provides you with step-by-step
+instructions for building your own custom Linux system, entirely from source code.
+
+Linux Version Numbering
+
+App major minor
+Debian 4 19
+
+There are 2 types of applications on our Linux computer;
+1. Binary applications compiled and embedded in the kernel1 -
+2. There are applications that are compiled but not embedded in the kernel but still remain in the file system.
+
+
+It shows the image of the kernel on the machine.
+root @ client: / lib / modules # ls -la / lib / modules
+total 12
+drwxr-xr-x 3 root root 4096 Jul 14 22:39.
+drwxr-xr-x 68 root root 4096 Jul 30 12:50 ..
+drwxr-xr-x 3 root root 4096 Jul 14 22:39 4.19.0-5-amd64
+
+
+It shows modules compiled with lsmod but not embedded in timber.
+root @ client: / lib / modules # lsmod
+Module Size Used by
+fuse 122880 3
+crct10dif_pclmul 16384 0
+crc32_pclmul 16384 0
+ghash_clmulni_intel 16384 0
+snd_intel8x0 45056 0
+intel_rapl_perf 16384 0
+snd_ac97_codec 147456 1 snd_intel8x0
+ac97_bus 16384 1 snd_ac97_codec
+snd_pcm 114688 2 snd_intel8x0, snd_ac97_codec
+serio_raw 16384 0
+pcspkr 16384 0
+snd_timer 36864 1 snd_pcm
+joydev 24576 0
+snd 94208 4 snd_intel8x0, snd_timer, snd_ac97_codec, snd_pcm
+soundcore 16384 1 snd
+vboxguest 40960 0
+battery 20480 0
+sg 36864 0
+ac 16384 0
+evv 28672 10
+ip_tables 28672 0
+x_tables 45056 1 ip_tables
+autofs4 49152 2
+ext4 733184 1
+crc16 16384 1 ext4
+mbcache 16384 1 ext4
+jbd2 122880 1 ext4
+crc32c_generic 16384 0
+fscrypto 32768 1 ext4
+ecb 16384 0
+hid_generic 16384 0
+usbhid 57344 0
+hid 135168 2 usbhid, hid_generic
+sr_mod 28672 0
+cdrom 65536 1 sr_mod
+sd_mod 61440 3
+ata_generic 16384 0
+crc32c_intel 24576 2
+aesni_intel 200704 0
+aes_x86_64 20480 1 aesni_intel
+crypto_simd 16384 1 aesni_intel
+cryptd 28672 3 crypto_simd, ghash_clmulni_intel, aesni_intel
+glue_helper 16384 1 aesni_intel
+vmwgfx 327680 2
+ohci_pci 16384 0
+ehci_pci 16384 0
+ohci_hcd 61440 1 ohci_pci
+ttm 126976 1 vmwgfx
+drm_kms_helper 200704 1 vmwgfx
+ahci 40960 2
+libahci 40960 1 ahci
+ata_piix 36864 0
+ehci_hcd 94208 1 ehci_pci
+psmouse 172032 0
+usbcore 290816 5 ohci_hcd, ehci_pci, usbhid, ehci_hcd, ohci_pci
+i2c_piix4 24576 0
+drm 483328 5 vmwgfx, drm_kms_helper, ttm
+usb_common 16384 1 usbcore
+libata 270336 4 ata_piix, libahci, ahci, ata_generic
+e1000 155648 0
+scsi_mod 245760 4 sd_mod, libata, sg, sr_mod
+video 45056 0
+button 16384 0
+
+
+What is XFS File System?
+XFS is a file system.
+XFS is a robust and highly-scalable single host 64-bit journaling file system.
+It is entirely extent-based, so it supports very large file and file system sizes.
+The maximum supported file system size in Red Hat Enterprise Linux 6.8 and later is 300 TB.
+The maximum supported XFS file system size in Red Hat Enterprise Linux 6.7 and earlier is 100 TB.
+The number of files an XFS system can hold is limited only by the space available in the
+file system.
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/performance_tuning_guide/s-storage-xfs
+In Red-Hats, XFS File system is used to mount the kernel while the system is starting up.
+
+
+root @ client: / lib / modules # modinfo xfs
+filename: /lib/modules/4.19.0-5-amd64/kernel/fs/xfs/xfs.ko
+license: GPL
+description: SGI XFS with ACLs, security attributes, realtime, no debug enabled
+author: Silicon Graphics, Inc.
+alias: fs-xfs
+depends: libcrc32c
+retpoline: Y
+intree: Y
+name: xfs
+vermagic: 4.19.0-5-amd64 SMP mod_unload modversions
+sig_id: PKCS # 7
+signer: Debian Secure Boot CA
+sig_key: A7: 46: 8D: EF
+sig_hashalgo: sha256
+signature: A8: 16: 25: A6: 56: 70: 15
+
+
+What happens when I create a file?
+like touch grandpa. What do I do to share a file with other people.
+The most convenient method for file sharing is FTP.
+Share a file via WindowsNetBios Protocol (-> Samba -> TCP 139)
+used.
+However, Samba is a vulnerable protocol.
+
+
+
+S-ATA -> Serial Advanced Technology Attachment
+SCSI -> Small Computer System Interface
+
+
+There are protocols that enable disks to communicate with the motherboard.
+Disks output process SCSI -> IDE -> P-ATA -> SATA -> SAS
+6 GB / s
+If we have the first 4 types of disks, such as SCSI, IDE, P-ATA, SATA, an FTP server on them
+if there is a slow reading speed from disk, whatever our network output speed
+a proper service cannot be provided.
+
+###################
+What is Liderahenk?
+Unlimited number of different systems and users on the corporate network from one center
+developed by TÜBİTAK ULAKBİM, which enables to manage, monitor and control
+is an open source software system.
+###################
+
+
+How do I know the release I use?
+root @ client: / lib / modules # cat / etc / debian_version
+10.0
+
+
+Kickstart - Red Hat
+By creating one configuration file, more than one (many) servers can be installed with this configuration.
+This system can be used for both managing and recording.
+we can search gray log with -> elastic search.
+
+What is Unix Socket?
+
+Each layer can know and detect its own data. As you go up in the layers,
+each layer can be blocked with if conditions according to its own area.
+
+App Application firewall -> Application-specific blocking rules can be written.
+Presentation
+Session
+tCP Firewall
+iP Firewall
+Data
+Physical
+
+127.0.0.1 Loop-back interface - TCP / Ip configuration is correct on the operating system side
+If it works, we can communicate with loopback ip.
+We use the Tcp stack while communicating in this way within myself.
+Tcp speech protocol syn, syn-ack is applied wherever we use tcp and this is an overhead
+creates.
+
+Interpreted languages ​​- code is not compiled, it speaks through the compiler. like php, python
+
+
+Apachi -> Mod_Php - >> Php
+Apachi corresponds with php and mod_php. The mod interprets php php.
+
+
+
+Unix socket speaks with its own socket mechanism.
+He speaks very fast because he doesn't have Overhead. Unix socket works only on our own machine (locally).
+
+
+Database --- Unix Socket --- php-fdm ------- Unix Socket --- Nginx ----------> TCP
+
+If I have 2 dockers on the same machine, I can replace them with Tcp.
+Speaking on the Unix socket provides a lot of performance.
