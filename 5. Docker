@@ -1,0 +1,152 @@
+DOCKER
+In the Docker container system; The docker daemon is installed on the base operating system, and the Docker containers speak to this daemon.
+
+To learn the docker version installed on Debian;
+root @ debian: ~ # apt info docker.io
+Package: docker.io
+Version: 18.09.1 ​​+ dfsg1-7.1
+
+Note: Docker releases an average of 3 months. It is necessary to use the new version instead of using the version that comes with the distribution.
+
+Docker documentation:
+https://docs.docker.com/install/linux/docker-ce/ubuntu/
+
+Note: It is necessary to install the version in Docker's own repos and remove the version from distribution. 2 of them will not work.
+
+################################################## #########
+To connect directly to critical note virtual box or any machine
+Port forwarding can be done by going to the network settings of the virtual box and entering the host machine port 2222 from the advanced tab, for example, 22 to the guest machine port.
+
+The \ character means taking the next character on the bash into account. It has a special meaning for \ bash.
+################################################## #########
+
+Docker setup --- >> We follow the website. The documentation for Ubuntu's Docker installation is generally good, we used this documentation for the installation.
+  a. We have installed the following packages to allow repo access over https with apt-install commands.
+ sudo apt-get install apt-transport-https ca-certificates curl gnupg2 software-properties-common
+
+  b. We added the GPG key to our own machine
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
+
+  c. We have added the repo to our source list.
+root @ debian: ~ # tail /etc/apt/sources.list
+deb http://deb.debian.org/debian/ buster-updates main
+deb-src http://deb.debian.org/debian/ buster-updates main
+
+Command:
+ sudo add-apt-repository "deb [arch = amd64] https://download.docker.com/linux/debian $ (lsb_release -cs) stable"
+
+  d. repo was updated with apt update.
+
+  D. Installation has started.
+apt-get install docker-ce docker-ce-cli containerd.io
+
+The best way to find out if a docker is working is to start a docker container.
+
+root @ debian: ~ # docker run hello-world
+
+All containers are from this source.
+https://hub.docker.com/
+
+Since this process dies because the docker runs one process in the container, the docker container also dies.
+
+The following command gives a list of running docker containers. So why doesn't the hello world appear? Because docker run hello-world and container hello world pressed and the container closed.
+root @ debian: ~ # docker ps
+CONTAINER ID IMAGE COMMAND CREATED STATUS PORTS NAMES
+
+If the worker-worker is not all for the entire container list;
+root @ debian: ~ # docker ps -a
+CONTAINER ID IMAGE COMMAND CREATED STATUS PORTS NAMES
+c79f7b7e7017 hello-world "/ hello" 5 minutes ago Exited (0) 5 minutes ago inspiring_stonebraker
+
+Here, each docker image comes with a command by default. The command "/ hello" for hello-world is (command). In status status, it has been successfully terminated with exited (0). Kontainer_id is a container specific id.
+In the "NAMES" section, the docker gave us a name because we did not name it.
+
+Every docker image has a version. If we don't give any version after the image with:, the latest one works.
+
+It connects the standard input of the container to the container input with Docker -i. Opens the terminal connection with -t. With / bin / bash, this command runs the predefined command.
+
+docker run -it ubuntu / bin / bash
+root @ e2bb16dab915: / # ps
+   PID TTY TIME CMD
+     1 pts / 0 00:00:00 bash
+    10 pts / 0 00:00:00 ps
+
+We started the docker, now we are looking at the docker containers working in another terminal.
+root @ debian: ~ # docker ps -a
+CONTAINER ID IMAGE COMMAND CREATED STATUS PORTS NAMES
+6e63f59da658 ubuntu "/ bin / bash" 14 seconds ago Up 13 seconds determined_taussig
+
+We created a file while in Docker
+root @ 6e63f59da658: / # touch / trial
+Then we got out and started again with that container name
+
+root @ debian: ~ # docker start determined_taussig
+
+root @ debian: ~ # docker ps -a
+CONTAINER ID IMAGE COMMAND CREATED STATUS PORTS NAMES
+6e63f59da658 ubuntu "/ bin / bash" 10 minutes ago Up 55 seconds determined_taussig
+
+
+
+root @ debian: ~ # docker stop determined_taussig
+
+In order to enter into the container while working, we sent the parameters to provide input with -a and output and -i.
+
+root @ debian: ~ # docker start -a -i determined_taussig
+6e63f59da658 root @: / #
+
+root @ debian: ~ # docker start --help
+
+Usage: docker start [OPTIONS] CONTAINER [CONTAINER ...]
+
+Startone or more stopped containers
+
+Options:
+  -a, --attach Attach STDOUT / STDERR and forward signals
+      --detach-keys string Override the key sequence for detaching a
+                             container
+  -i, --interactive Attach container's STDIN
+  
+  
+ Now we have started the docker first and then we have attached the terminal.
+  root @ debian: ~ # docker start determined_taussig
+determined_taussig
+root @ debian: ~ # docker attach determined_taussig
+6e63f59da658 root @: / #
+
+To enter Docker with terminal connection and exit without closing the container, we will issue the ctrl-p ctrl-q command one after the other.
+
+When attaching the Docker, I can give you the command with which to detach.
+aty @ debian: ~ $ sudo docker start determined_taussig
+[sudo] password for aty:
+determined_taussig
+aty @ debian: ~ $ sudo docker attach --detach-keys = "ctrl-x" determined_taussig
+It is designed to run a single program in each container. Therefore, each container comes with its own predefined program.
+
+With this command, we can run bin / bash instead of the program of the docker predefined httpd image.
+docker run -it hhtpd / bin / bash
+
+We removed one ubunutu container and created a folder named trial1 and left the container.
+
+aty @ debian: ~ $ sudo docker run --name ubuntu01 -it ubuntu / bin / bash
+root @ ea5f127986c7: / # touch / trial1
+root @ ea5f127986c7: / # exit
+
+
+We delete it with this command.
+docker rm ubuntu01
+
+aty @ debian: ~ $ sudo docker info
+Containers: 5
+ Running: 1
+ Paused: 0
+ Stopped: 4
+Images: 3
+Server Version: 18.09.8
+Storage Driver: overlay2
+ Backing Filesystem: extfs
+ 
+ As seen from the above output, Docker uses the overlay2 file system. So what does the overlay file system do? For example, I ran one ubuntu docker image. Then I created another container with this image. and in this way he created several containers. Here, the docker does not copy the image files for each container. When we change any container, for example, in the / etc / passwd file, the docker writes the change for that container to another file on the main file and does not play in the main file. In this way, the main image always remains the same.
+ 
+ Removes the machine's 8080 port to the container, directing it to the docker's 80 port.
+aty @ debian: ~ $ sudo docker run -p 8080: 80 httpd
