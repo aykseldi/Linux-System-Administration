@@ -1,0 +1,85 @@
+RAID, LVM and FreeNAS
+
+
+All of our storage areas are block devices.
+## There are 2 methods for logging.
+Method 1 is to mount a separate disk and print the logs there
+2.You can create different partitions on the same machine and log there. However, if this is the case, the IO operation on the same disc will increase too much. If we do both read IO and write IO on the same disk, bottleneck occurs.
+What it makes easy is to take a backup.
+3. Logs can be sent to another server via rsyslog. SIEM
+
+
+
+OS LVM
+-----------------
+RAID 5/6
+2 -> 100 GB Disk
+3 -> 100 GB Disk In this figure 60 to 200-300 IO per second
+4 -> We can reach 100 GB IO speed.
+5 -> 100 GB
+6 -> 100 GB
+
+
+For 2 disks of 100 GB
+Raid 0 - All disks are used.
+Raid 1 - 100 gb capacity. He's doing mirroring.
+Raid 1 0 - 100 gb space but IO speed
+Raid 5 -> Capacity drops to 60-70 Gb
+Raid 6 -> capacity becomes 70-80 Gb but IO speed decreases.
+
+
+LVM
+Physical disks should be included in Physical Group first
+Discs 1-2-3-4-5-6
+PGs are then imported into Volume groups. For example, 2 discs into the same Volume group
+(1-2) VG 1 (3-4) VG 2 (4-5) VG 3
+Then, VGs are included in the Logical Group, making it look like a single disk.
+(VG 1 -VG 2 - VG3)
+
+FreeNAS
+FreeNAS is an operating system that can be installed on virtually any hardware platform to share data over a network. FreeNAS is the simplest way to create a centralized and easily accessible place for your data. Use FreeNAS with ZFS to protect, store, backup, all of your data. FreeNAS is used everywhere, for the home, small business, and the enterprise.
+
+It is not desirable to use a RAID structure in high IO locations because Raid controls also create a separate overhead. If we are to use FreeNAS, it is necessary to bypass Raid.
+
+
+Stat Command
+[root @ ldap ~] # stat grandfather
+  File: 'grandfather'
+  Size: 0 Blocks: 0 IO Block: 4096 regular empty file
+Device: fd00h / 64768d Inode: 16876421 Links: 1
+Access: (0644 / -rw-r - r--) Uid: (0 / root) Gid: (0 / root)
+Access: 2019-07-29 16: 14: 56.270199115 -0400
+Modify: 2019-07-29 16: 14: 56.270199115 -0400
+Change: 2019-07-29 16: 14: 56.270199115 -0400
+
+We generate a lot of log information if the access time information is turned on.
+So where are we going to turn off access time information?
+
+will be closed while mounting. We will have to enter this in fstab. discard.noatime.nodirti to
+
+We have a disk, it is 80% free but we can not write free space. What could be the reason for this?
+Inode may have been exhausted.
+If there are too many tiny files, inode may run out for this reason.
+
+
+** We can send messages to users who are connected to ssh
+[aty @ ldap ~] $ write root pts / 1
+Hello root
+I need something urgent
+How do we do
+Hmm
+
+[root @ ldap ~] #
+Message from aty@ldap.ali.net on pts / 0 at 00:25 ...
+Hello root
+
+
+
+Tcp Wrapper -> We can filter the thread on the application layer
+
+
+There is no need for FTP service to make FTP. If we can do ssh
+ssh -p 2230 aty @ localhost -> sftp -P 2230 aty @ localhost
+
+The difference from scp is that we can upload or pull files from the opposite side with scp, but we cannot rename.
+In sftp, I can also upload or download, as well as rename.
