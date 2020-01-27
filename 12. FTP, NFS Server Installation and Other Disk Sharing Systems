@@ -1,0 +1,309 @@
+Setting Up a TP Server
+root @ client: / lib / modules # apt-cache search ftp
+root @ client: / lib / modules # apt-cache search ftp | grep -i daemon
+libnethttpd-ocaml-dev - OCaml application-level Internet libraries - HTTP daemon development libraries
+owftpd - FTP daemon providing access to 1-Wire networks
+proftpd-basic - Versatile, virtual-hosting FTP daemon - binaries
+proftpd-dev - Versatile, virtual-hosting FTP daemon - development files
+proftpd-doc - Versatile, virtual-hosting FTP daemon - documentation
+proftpd-mod-geoip - Versatile, virtual-hosting FTP daemon - GeoIP module
+proftpd-mod-ldap - Versatile, virtual-hosting FTP daemon - LDAP module
+proftpd-mod-mysql - Versatile, virtual-hosting FTP daemon - MySQL module
+proftpd-mod-odbc - Versatile, virtual-hosting FTP daemon - ODBC module
+proftpd-mod-pgsql - Versatile, virtual-hosting FTP daemon - PostgreSQL module
+proftpd-mod-snmp - Versatile, virtual-hosting FTP daemon - SNMP module
+proftpd-mod-sqlite - Versatile, virtual-hosting FTP daemon - SQLite3 module
+pyftpd - ftp daemon with advanced features
+
+[root @ ldap ~] # yum install vsftpd
+[root @ ldap ~] # rpm -ql vsftpd -> Query and list what comes in this package (q)
+/etc/logrotate.d/vsftpd
+/etc/pam.d/vsftpd
+/ Etc / vsftpd
+/ Etc / vsftpd / ftpusers
+/ Etc / vsftpd / USER_LIST
+/etc/vsftpd/vsftpd.conf
+/etc/vsftpd/vsftpd_conf_migrate.sh
+/ Usr / lib / systemd / system-generators / vsftpd-generator
+/usr/lib/systemd/system/vsftpd.servi by
+/usr/lib/systemd/system/vsftpd.target
+/usr/lib/systemd/system/vsftpd@.servi by
+/ Usr / sbin / vsftpd
+
+
+[root @ ldap ~] # rpm -qf / etc / services -> which package created this etc / service file
+setup-2.8.71-10.el7.noarch
+
+[root @ ldap ~] # rpm -qa * ftp * -> I will answer the question whether a ftp is installed.
+vsftpd-3.0.2-25.el7.x86_64
+
+rpm does not solve packet dependency, it does not resolve dependencies. Yum maintains a repo list of its own. Yum repo in me;
+[root @ ldap ~] # ls -ala /etc/yum.repos.d/
+total 60
+drwxr-xr-x. 2 root root 257 Jul 26 03:27.
+drwxr-xr-x. 78 root root 8192 Jul 29 13:14 ..
+-rw-r - r--. 1 root root 1664 Nov 23 2018 CentOS-Base.repo
+-rw-r - r--. 1 root root 1309 Nov 23 2018 CentOS-CR.repo
+-rw-r - r--. 1 root root 649 Nov 23 2018 CentOS-Debuginfo.repo
+-rw-r - r--. 1 root root 314 Nov 23 2018 CentOS-fasttrack.repo
+-rw-r - r--. 1 root root 630 Nov 23 2018 CentOS-Media.repo
+-rw-r - r--. 1 root root 1331 Nov 23 2018 CentOS-Sources.repo
+-rw-r - r--. 1 root root 5701 Nov 23 2018 CentOS-Vault.repo
+-rw-r - r--. 1 root root 951 Oct 2 2017 epel.repo
+-rw-r - r--. 1 root root 1050 Oct 2 2017 epel-testing.repo
+-rw-r - r-- 1 root root 5189 Apr 17 00:12 pgdg-redhat-all.repo
+
+
+To use ldap -> FreeIPA features -> ldap, kerbelos, certificate authority, dns, ntp
+FreeIPA - Under the Red Line Directory Service.
+Integrated security information management solution combining Linux (Fedora), 389 Directory Server, MIT Kerberos, NTP, DNS, Dogtag certificate system, SSSD and others.
+It can also work synchronously with each other.
+We can establish and run trust relation with the active directory.
+
+keycloak
+Add authentication to applications and secure services with minimum fuss. No need to deal with storing users or authenticating users. It's all available out of the box.
+Impersonation
+
+Kong Api
+We develop microservices and we go to this micro service and send it to Mernis. In the meantime, people who develop the code see the mernis password. To prevent this, the congress intervenes and allows the mernis to enter the relevant password and continue. We can also verify the user by connecting Kong with IPA.
+
+Is there a repo structure in Windows?
+chocolatey.org -> works like a repo manager on windows.
+What is the hardware in the clients and what software is installed. It must be managed in some way.
+Server and client management can be done with puppet and chef and chocoletey.
+
+FTP Configuration
+FTP works in 2 ways, either verifying username password or not at all. If anonymous is open, anonymous incoming can only read.
+vim /etc/vsftpd/vsftpd.conf
+anonymous_enable = YES ->
+#
+# Uncomment this to allow local users to log in.
+# When SELinux is enforcing check for SE bool ftp_home_dir
+local_enable = YES -> Can local users running the application log in? provides it
+#
+# Uncomment this to enable any form of FTP write command.
+write_enabl = YES
+#
+# Default umask for local users is 077. You may wish to change this to 022,
+# if your users expect that (022 is used by most other ftpd's)
+local_umask = 022
+
+# Activate logging of uploads / downloads.
+xferlog_enabl = YES
+
+# If you want, you can arrange for uploaded anonymous files to be owned by
+# a different user. Note! Using "root" for uploaded files is not
+# recommended!
+# chown_uploads = YES -> No matter who uploads, the user we want appears to have uploaded, so we don't have to say change owner and change mod every time we upload.
+# = Chown_usern but whoever
+
+# You may specify an explicit list of local users to chroot () to their home
+# directory. If chroot_local_user is YES, then this list becomes a list of
+# users to NOT chroot ().
+# (Warning! Chroot'ing can be very dangerous. If using chroot, make sure that
+# the user does not have write access to the top level directory within the
+# chroot)
+# chroot_local_user = YES -> allows to go to root by saying cd. If you need to do this no.
+Chroot_list_enabl = YES #
+# (default follows)
+# Chroot_list_fil A = / etc / vsftpd / chroot_list
+
+tcp_wrappers = YES -> This way we can filter out the IP addresses we don't want.
+pam_service_name = vsftpd -> Verification mechanism nsswitch
+userlist_enable = YES -> We can add users to the blacklist.
+
+anon_root = / srv / ftp / -> root path of the user to enter anonymously
+no_anon_password = YES -> don't ask for password anonymously
+hide_ids = YES
+pasv_min_port = 40000
+pasv_min_port = 50000
+
+
+################################################## ##############################
+Making a Virtual Host with FTP
+ vim /usr/share/doc/vsftpd-3.0.2/EXAMPLE/VIRTUAL_HOSTS/README
+Step 1) Set up a virtual IP address.
+(the standard IP address is 192.168.1.2) -> This was the IP address of normal eth0
+ifconfig eth0: 1 192.168.1.10 up -> we gave another ip as ethip for eth0.
+(note - this isn't quite complete, the route for local connects hasn't been
+added, but it will do for now)
+
+Step 2) Create a user / location for the new virtual site.
+useradd -d / var / ftp_site2 ftp_site2
+chown root.root / var / ftp_site2
+chmod a + rx / var / ftp_site2
+umask 022
+mkdir / var / ftp_site2 / pub
+echo "test"> / var / ftp_site2 / pub / content
+
+Step 3) Modify the existing site to respond to the primary IP.
+Edit /etc/xinetd.d/vsftpd, and add the config line:
+bind = 192.168.1.2
+
+Step 4) Create the new site, responding on the virtual IP.
+
+cp /etc/xinetd.d/vsftpd /etc/xinetd.d/vsftpd2
+
+Edit vsftpd2, and change
+- The bind line to refer to the IP address 192.168.1.10
+- Add the line
+server_args = /etc/vsftpd_site2.conf
+
+This launches this FTP site with a different vsftpd configuration file.
+
+cp /etc/vsftpd.conf /etc/vsftpd_site2.conf
+
+Add two lines:
+ftp_usern = The ftp_site2
+ftpd_banner = This is the alternative FTP site.
+
+
+Step 5) Restart xinetd and test!
+
+################################################## ##############################
+
+
+pfsense -------> BSD revenue and used as firewall. It can be used more visually.
+snort ---> for IPS - IDS
+
+NFS Setup
+[aty @ ldap epel] $ yum search nfs
+Loaded plugins: fastestmirror
+Determining fastest mirrors
+ * base: mirror.rackdc.com
+ * epel: ftp.arnes.si
+ * extras: mirror.hosting.com.tr
+ * updates: istanbul.centos-mirror.guzel.net.tr
+=============================== N / S matched: nfs ============= ==================
+centos-release-nfs-ganesha28.noarch: NFS-Ganesha 2.8 packages from the CentOS
+                                    : Storage SIG repository
+libnfs.x86_64: Client library for accessing NFS shares over a network
+libnfs-devel.x86_64: Development files for libnfs
+libnfs-utils.x86_64: Utilities for accessing NFS servers
+
+[aty @ ldap epel] $ yum info nfs-utils
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirror.rackdc.com
+ * epel: ftp.arnes.si
+ * extras: mirror.hosting.com.tr
+ * updates: istanbul.centos-mirror.guzel.net.tr
+Available Packages
+Name: nfs-utils
+Arch: x86_64
+Epoch: 1
+Version: 1.3.0
+Release: 0.61.el7
+Size: 410 k
+Repo: base / 7 / x86_64
+Summary: NFS utilities and supporting clients and daemons for the kernel
+            : NFS server
+URL: http://sourceforge.net/projects/nfs
+License: MIT and GPLv2 and GPLv2 + and BSD
+Description: The nfs-utils package provides a daemon for the kernel NFS server
+            : and related tools, which provides a much higher level of
+            : performance than the traditional Linux NFS server used by most
+            : users.
+            :
+            : This package also contains the showmount program. showMount
+            : queries the mount daemon on a remote host for information about
+            : the NFS (Network File System) server on the remote host. FR
+            : example, showmount can display the clients which are mounted on
+            : that host.
+            :
+            : This package also contains the mount.nfs and umount.nfs program.
+
+[aty @ ldap epel] $ yum install nfs-utils
+Loaded plugins: fastestmirror
+You need to be root to perform this command.
+[aty @ ldap epel] $ sudo yum install nfs-utils
+
+
+[aty @ ldap epel] $ more / etc / exports
+/ srv / ftp 192.168.43.0 (rw, sync, no_root_squash, no_subtree_check)
+vi
+
+
+
+[aty @ ldap epel] $ more /usr/lib/systemd/system/nfs-server.service
+[Unit]
+Description = NFS server and services
+defaultdependencies = no
+Requires = network.target proc-fs-nfsd.mount
+Requires = nfs-mountd.service
+Wants = rpcbind.socket network-online.target
+Wants = rpc-statd.service nfs-idmapd.service
+Wants = rpc-statd-notify.servi by
+
+After = network-online.target local-fs.target
+After = proc-fs-nfsd.mount rpcbind.socket nfs-mountd.service
+After = nfs-idmapd.service rpc-statd.service
+Before = rpc-statd-notify.service
+
+# GSS services dependencies and ordering
+Wants = auth-rpcgss-module.servi by
+After = rpc-gssd.service gssproxy.service
+
+Wants = nfs-config.servi by
+After = nfs-config.servi by
+
+[Service]
+environmentfil A = - / r / sysconfig / nfs-utils
+
+Type = oneshot
+remainafterexit = yes
+ExecStartPre = - / usr / sbin / exportfs -r
+ExecStart = / usr / sbin / rpc.nfsd $ RPCNFSDARGS
+ExecStartPost = - / bin / sh -c 'if systemctl -q is-active gssproxy; then systemctl re
+start gssproxy; fi '
+ExecStop = / usr / sbin / rpc.nfsd 0
+ExecStopPost = / usr / sbin / exportfs -au
+ExecStopPost = / usr / sbin / exportfs -f
+
+ExecReload = - / usr / sbin / exportfs -r
+
+
+
+
+
+
+[aty @ ldap epel] $ find / usr / lib | xargs grep -i export -s
+lib / lib64 / libexec /
+[aty @ ldap epel] $ find / usr / lib / systemd / system | xargs grep -i export -s
+/usr/lib/systemd/system/nfs.service:ExecStartPre=-/usr/sbin/exportfs -r
+/usr/lib/systemd/system/nfs.service:ExecStopPost=/usr/sbin/exportfs -au
+/usr/lib/systemd/system/nfs.service:ExecStopPost=/usr/sbin/exportfs -f
+/usr/lib/systemd/system/nfs.service:ExecReload=-/usr/sbin/exportfs -r
+/usr/lib/systemd/system/nfs-server.service:ExecStartPre=-/usr/sbin/exportfs -r
+/usr/lib/systemd/system/nfs-server.service:ExecStopPost=/usr/sbin/exportfs -au
+/usr/lib/systemd/system/nfs-server.service:ExecStopPost=/usr/sbin/exportfs -f
+/usr/lib/systemd/system/nfs-server.service:ExecReload=-/usr/sbin/exportfs -r
+
+
+[root @ ldap cron.d] # more / etc / exports
+/ srv / ftp 192.168.43.0/24(rw,sync,no_root_squash,no_subtree_check)
+
+OTHER FILE / DISK SHARING SYSTEMS
+
+Other file sharing systems;
+Can take rsync -> Diff. Ideal for backup.
+iscsi -> We can export a disk to another machine over the network as a disk. Thus, that machine can use the space given by ISCI as if it were its own disk.
+In NFS or FTP we offer a directory to share. In other words, a different situation occurs than NFS and FTP.
+
+
+For example, I have 2 KVM machines and work on different physical machines. The services running on my KVM machines are important and I don't want them to shut down.
+We have an idle server with 10 Tb disk capacity.
+KVM1 -> 2 TB
+
+KVN2 -> 2 TB
+
+/ Etc / libvirth / qemu
+/ Var / lib / libvirth / images
+
+
+With ISCSI, we can export disks to another machine over the network. But because we deliver over the network, our speed (read or write IO) is as much as the network speed.
+We also have an LVM structure on our idle server. As ISCSI, when we give these discs to KVM machines, our KVM machines are
+can run as fast as speed.
+
+FCoE -> Fiber Channel Over Ethernet
+8/16/32/64 GB / sec
