@@ -1,0 +1,168 @@
+KVM
+Before installing KVM, we need to know if the CPU has virtualization support.
+We have executed the following command for this.
+
+egrep -c '(vmx | svm)' / proc / cpuinfo
+aty @ debian: ~ $ sudo egrep -c '(vmx | svm)' / proc / cpuinfo
+0
+-> 0 means no rotation, so we'll have to change it.
+However, if you are using Virtual Box, the virtual box does not support nesting.
+So we switched to VMWare and made the following settings there.
+
+Nested virtualization must be opened on VMware in order to install a virtual machine on the virtual machine. The following lines do not explain how to open nested virtualization on VmWare.
+Virtualized HV is fully supported for virtual hardware version 9 or later VMs on hosts that support Intel VT-x and EPT or AMD-V and RVI. To enable virtualized HV, select VM-> Settings and navigate to the processor settings screen.
+***** - >>> Check the box next to "Virtualize Intel VT-x / EPT or AMD-V / RVI."
+aty @ debian: ~ $ sudo egrep -c '(vmx | svm)' / proc / cpuinfo
+[sudo] password for aty:
+2nd
+KVM is installed in direct shell.
+aty @ debian: ~ $ lsmod | grep -i kvm
+kvm_intel 245760 0
+kvm 724 992 1 kvm_intel
+irqbypass 16384 1 kvm
+
+We run the following command to install utilities to create KVM virtual machines.
+aty @ debian: ~ $ sudo apt install qemu-kvm
+
+
+################################################## ############ 33 ##########
+ How will kvm virtualization be on a machine running on KVM?
+We didn't do it because our virtualization is Vmware, but
+To run the kvm virtual machine in KVM, the following folder is created in the main virtual kvm machine and
+vim /etc/modprobe.d/kvm-nested.conf
+options kvm-intel nested = 1
+
+
+The first command module below was removed and reinstalled the 2nd command module.
+modpro -r kvm-intel
+modpro -a kvm-intel
+################### ######################### 3 3 #### ##########################
+
+
+   Disk image
+A file type that can be detected as a block device by other operating systems.
+Virtual operating systems can detect and use it like a disk.
+
+In Physical Host - >> File
+In Virtual Host - >> Block Device
+
+I created a 2gb file (private) in the directory I was in with this command
+aty @ debian: ~ $ sudo qemu-img create disk.img 2G
+Formatting 'disk.img', fmt = raw size = 2147483648
+ - >> If we format the Raw image type, the more they take up disk space, the better side is that they are fast, they do not perform extra processing on the virtual machine. The downside is they cannot be extended.
+ 
+- >> Copy On Write image type (COW) takes up as much image space as data on the disc.
+
+Qemu creates raw image to images by default. To create COW image, it is necessary to say qemu.
+Qemu's supported COW image is qcow2.
+
+aty @ debian: ~ $ sudo qemu-img create disk.img 2G -f qcow2
+Formatting 'disk.img', fmt = qcow2 size = 2147483648 cluster_size = 65536 lazy_refcounts = off refcount_bits = 16
+
+aty @ debian: ~ $ ls -lh
+total 196K
+-rw-r - r-- 1 root root 193K Jul 21 11:48 disk.img
+
+ 
+aty @ debian: ~ $ ls -l
+total 0
+-rw-r - r-- 1 root root 2147483648 Jul 21 11:35 disk.img
+
+With the du command, we physically found the place it occupies on the disk.
+aty @ debian: ~ $ sudo du -hs disk.img
+0 disk.img
+
+  Create a KVM Virtual Machine
+How much memory to use with -m, which disk image to use in -hda, -cdrom hamgi iso will be used, -boot will boot from cdrom with drom -netdev and network structure parameters are given.
+aty @ debian: ~ $ sudo -E kvm -m 512 -hda disk.img -cdrom debian-10.0.0-amd64-netinst.iso -boot d -netdev user, id = user.0 -device e1000, netdev = user .0
+
+- >> In this way, creating a virtual machine is outdated. Even a minor mistake here has a catastrophic (fatal) effect.
+
+That's why we installed libvirt :)
+https://libvirt.org/docs.html
+
+aty @ debian: ~ $ sudo apt install libvirt-daemon-system libvirt-clients virtinst
+Reading package lists ... Done
+
+libvirt-daemon-system -> Virtualization management application installs server side, system deamon.
+libvirt-clients --------> Program for connecting to libvirt and running commands. Like the terminal interface
+virtinst ---------------> Enables virtual machine definition using libvirt.
+
+We get a list of all network structures managed by libvirt.
+aty @ debian: ~ $ sudo virsh net-list --all
+ Name State Autostart Persistent
+----------------------------------------------
+ default inactive no yes
+
+He set up a network called Default but did not activate it.
+
+To change this command:
+aty @ debian: ~ $ sudo virsh net-edit default
+
+Select an editor. To change later, run 'select-editor'.
+  1. / bin / nano <---- easiest
+  2. /usr/bin/vim.basic
+  3. /usr/bin/vim.tiny
+
+If we make changes or to start
+aty @ debian: ~ $ sudo virsh net-start default
+Network default started
+
+In the back, he created a bridge called br0 for us, he set up dhcp, he entered the NAT rule.
+aty @ debian: ~ $ sudo brctl show
+bridge name bridge id STP enabled interfaces
+virbr0 8000.525400585569 yes virbr0-nic
+
+Ip add
+5: virbr0: <NO-CARRIER, BROADCAST, MULTICAST, UP> mtu 1500 qdisc noqueue state DOWN group default qlen 1000
+    link / ether 52: 54: 00: 58: 55: 69 brd ff: ff: ff: ff: ff: ff
+    inet 192.168.122.1/24 brd 192.168.122.255 scope global virbr0
+       valid_lft forever preferred_lft forever
+6: virbr0-nic: <BROADCAST, MULTICAST> mtu 1500 qdisc pfifo_fast master virbr0 state DOWN group default qlen 1000
+    link / ether 52: 54: 00: 58: 55: 69 brd ff: ff: ff: ff: ff: ff
+
+aty @ debian: ~ $ sudo virsh net-list --all
+ Name State Autostart Persistent
+--------------------------------------------
+ default active no yes
+
+To make autostart because autostart is no
+ 
+aty @ debian: ~ $ sudo virsh net-autostart default
+Network default marked as autostarted
+
+aty @ debian: ~ $ sudo virsh net-list --all
+ Name State Autostart Persistent
+--------------------------------------------
+ default active yes yes
+
+Command to create a virtual machine with Libvirt ..
+The parameters of the virtual machine created with this command were saved under the name kvm1.
+
+aty @ debian: ~ $ sudo virt-install --name kvm1 --ram 512 --disk path =. / kvm.img, size = 1 --network network: default --accelerate --vnc -c ./debian- 10.0.0-amd64-netinst.iso
+
+KVM configuration (for the machine we created above)
+aty @ debian: ~ $ sudo virsh edit kvm1
+Domain kvm1 XML configuration not changed.
+
+We close the KVM virtual machine with destro.
+
+aty @ debian: ~ $ sudo virsh list --all
+ Id Name State
+----------------------
+ 1 kvm1 running
+
+aty @ debian: ~ $ sudo virsh destroy kvm1
+Domain kvm1 destroyed
+
+aty @ debian: ~ $ sudo virsh list --all
+ Id Name State
+-----------------------
+ - kvm1 shut off
+
+
+There is every tool (interaction) for the management of virtual machines. Resize virtual machine disk, copy files from virtual machine, view text, cloning
+http://libguestfs.org/
+
+There is also a good document ubuntu about KVM
+https://help.ubuntu.com/community/kvm/
