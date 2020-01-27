@@ -1,0 +1,352 @@
+DNS
+Dns is actually a database.
+It is to translate from name to ip address.
+Addresses
+Security keys
+Mail Exchange Information
+Text Records
+Host hardware software information
+NXDOMAIN -> No dns record (Does not exist)
+NOERROR -> I don't have such information
+dig ->
+root @ debian: ~ # dig mmmm.gentoo.org
+
+; << >> DiG 9.11.5-P4-5.1-Debian << >> mmmm.gentoo.org
+;; global options: + cmd
+;; Got answer:
+;; - >> HEADER << - opcode: QUERY, status: NXDOMAIN, id: 41472
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+
+root @ debian: ~ # dig gentoo.org -t hinfo -> This time we entered the correct address but the hardware information was not found.
+
+; << >> DiG 9.11.5-P4-5.1-Debian << >> gentoo.org -t hinfo
+;; global options: + cmd
+;; Got answer:
+;; - >> HEADER << - opcode: QUERY, status: NOERROR, id: 14292
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+
+Loosely Coherent
+Master -> Changes are made here
+Slave Slave Slave -> Changes are pushed to the slaves.
+
+UDP and TCP protocol and 53 ports are used.
+Both must be allowed through Firewall. If we start getting a DNS error, it is necessary to check whether the TCP 53 pot is selected.
+
+
+namespace
+fqdn -> Fully qualified Domain Namespace
+Actual address -> www.gentoo.org. -> There is a dot at the end.
+
+DNS Server Setup
+1. Example.com is a zone file that will create a zone surname first.
+
+vim /etc/bind/db.example.com
+We can only make these settings on the master server.
+When we go to the slaves, they keep them as binary, after all they don't change the slaves.
+;
+;
+;
+$ ORIGIN.
+$ TTL 1800; 30 minutes ->
+example.com IN (Internet) SOA (startup authority) alice.example.com. I dnsadmin.example.co. (
+one ; Serial
+28800; Refresh (8 hours) ---> How often will the query renewal be done from the master
+7200; Retry (2 hours) -> In case of no response from the master, it will be renewed every few hours
+864000; Expire (10 days) -> No matter how long the master can not get the answer, the information in the slave will be completely invalid.
+86400; Negative Cache TTL (1 day) -> If you get NX domain, the same answer is valid)
+)
+;
+
+IN NS alice.example.com.
+IN A 127.0.0.1 -> Enables access to the site without writing www.
+IN AAA :: 1
+IN MX 10 mail.example.com. - >> The number 10 indicates priority.
+
+$ ORIGIN example.com. -> To avoid adding example.com to all
+$ TTL 900
+
+alice IN A 192.168.10.10
+INi AAAA 2001: 470: 1f0b: 7c3: 1 :: 2
+
+
+
+root @ client: / etc / bind # named-checkconf -z
+zone localhost / IN: loaded serial 2
+zone 127.in-addr.arpa/IN: loaded serial 1
+zone 0.in-addr.arpa/IN: loaded serial 1
+zone 255.in-addr.arpa/IN: loaded serial 1
+
+the following parameters into the named.conf.local file
+vim /etc/bind/named.conf.local
+//
+// Do any local configuration here
+//
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+// include "/etc/bind/zones.rfc1918";
+zone "example.com" {
+type master;
+file "/etc/bind/db.example.com";
+};
+
+
+
+Need to restart BIND9
+root @ client: / etc / bind # systemctl restart bind9
+
+REVERSE DNS REGISTRATION (Go from Ip to Name)
+
+dns query for ip comes name
+dns query for name comes ip
+
+In-addr.arpa --- When we go to the address from Ip, we make this question all over the world.
+Like 5.168.192.in-addr.arpa ...
+
+root @ client: / etc / bind # vim db.10.168.192.in-addr.arpa
+$ ORIGIN.
+$ TTL 70800; 30 minutes
+10.168.192.in-addr.arpa IN SOA localhost. root.localhost. (
+one ; Serial
+64800; Refresh (8 hours)
+7200; Retry (2 hours)
+864000; Expire (10 days)
+86400; Negative Cache TTL (1 day)
+)
+;
+
+IN NS ns1.example.com.
+
+$ ORIGIN 10.168.192.in-addr.arpa.
+
+10 IN PTR alice.example.com.
+21 IN PTR bob.example.com
+
+
+Then we added the following lines.
+root @ client: / etc / bind # vim /etc/bind/named.conf.local
+
+zone "10.168.192.in-addr.arpa" {
+type master;
+file "/etc/bind/db.10.168.192.in-addr.arpa";
+};
+
+
+After doing these, we checked again and reloaded rndc.
+A command used to manage the rndc bind server.
+
+root @ server: ~ # / usr / sbin / named-checkconf -z
+zone example.com/IN: loaded serial 1
+zone 10.168.192.in-addr.arpa/IN: loaded serial 1
+zone localhost / IN: loaded serial 2
+zone 127.in-addr.arpa/IN: loaded serial 1
+zone 0.in-addr.arpa/IN: loaded serial 1
+zone 255.in-addr.arpa/IN: loaded serial 1
+root @ server: ~ # rndc reload
+server reload successful
+
+
+
+root @ server: ~ # dig -x 192.168.10.10 @ 127.0.0.1 + short
+I alice.example.co.
+root @ server: ~ # dig alice.example.com. + short @ 127.0.0.1
+192.168.10.10
+
+
+
+.
+.org .com .ford
+.gentoo .google .amazon
+.wwww .buss
+
+-> separated by dots and maximum 63 characters per point
+
+Name Servers
+1.Autoritative (authorized)
+Master
+Slave
+2.Caching (Recursive)
+3.Karışık
+It should not be used both autoritative and mixed.
+Autoritative -> Bind, NSD, PowerDNS, Microsoft
+
+Mixed -> Bind, Unbound
+
+
+Resolvers
+When an address is written on the client machine with a browser, the system calls (gethostname by name etc.) asks to the resolver with the glibc library.
+Application -> Resolver -> DNS
+
+
+root @ debian: ~ # more /etc/resolv.conf
+nameserver 192.168.43.1
+
+
+resolver --- caching server ---------> Root server
+<---------
+| You can learn the answer at
+| (says org and sends IP addresses of DNS servers with org)
+|
+|
+|
+---- >> gTLD server (DNS server that knows organs)
+            |
+|
+|
+<--- |
+gentoo.org
+server
+
+
+DIG Command
+
+root @ debian: ~ # dig -t soa. + Multi
+
+; << >> DiG 9.11.5-P4-5.1-Debian << >> -t soa. + Multi
+;; global options: + cmd
+;; Got answer:
+;; - >> HEADER << - opcode: QUERY, status: NOERROR (This indicates that we did not receive errors), id: 24616
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags :; udp: 1280
+;; QUESTION SECTION:
+;. IN SOA (Startup Autoriity)
+
+;; ANSWER SECTION:
+. 5009 IN SOA a.root-servers.net. I nstld.verisign-grs.co. (
+                                2019072602; serial
+                                1800; refresh (30 minutes)
+                                900; retry (15 minutes)
+                                604800; expire (1 week)
+                                86400; minimum (1 day)
+                                )
+
+;; Query time: 102 msec
+;; SERVER: 192.168.43.1 # 53 (192.168.43.1)
+;; WHEN: Fri Jul 26 20:41:16 +03 2019
+;; MSG SIZE rcvd: 103
+
+dig -t soa. + multi @ 8.8.8.8 - >> asks for 8.8.8.8 ip address
+
+
+root @ debian: ~ # dig -t soa gentoo.org @ a.root-servers.net.
+
+; << >> DiG 9.11.5-P4-5.1-Debian << >> -t soa gentoo.org @ a.root-servers.net.
+;; global options: + cmd
+;; Got answer:
+;; - >> HEADER << - opcode: QUERY, status: NOERROR, id: 35679
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 6, ADDITIONAL: 13
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags :; udp: 1472
+;; QUESTION SECTION:
+; Gentoo.org. IN SOA
+
+;; AUTHORITY SECTION:
+organ. 172800 (Validity period of information in seconds)
+  IN NS a0.org.afilias-nst.info.
+  
+organ. 172800 IN NS a2.org.afilias-nst.info.
+organ. 172800 IN NS b0.org.afilias-nst.org.
+organ. 172800 IN NS b2.org.afilias-nst.org.
+organ. 172800 IN NS c0.org.afilias-nst.info.
+organ. 172800 IN NS d0.org.afilias-nst.org.
+
+;; ADDITIONAL SECTION:
+a0.org.afilias-nst.info. 172800 IN A 199.19.56.1
+a2.org.afilias-nst.info. 172800 IN A 199.249.112.1
+b0.org.afilias-nst.org. 172800 IN A 199.19.54.1
+b2.org.afilias-nst.org. 172800 IN A 199.249.120.1
+c0.org.afilias-nst.info. 172800 IN A 199.19.53.1
+d0.org.afilias-nst.org. 172800 IN A 199.19.57.1
+a0.org.afilias-nst.info. 172800 IN AAAA 2001: 500: e :: 1
+a2.org.afilias-nst.info. 172800 IN AAAA 2001: 500: 40 :: 1
+b0.org.afilias-nst.org. 172800 IN AAAA 2001: 500: c :: 1
+b2.org.afilias-nst.org. 172800 IN AAAA 2001: 500: 48 :: 1
+c0.org.afilias-nst.info. 172800 IN AAAA 2001: 500: b :: 1
+d0.org.afilias-nst.org. 172800 IN AAAA 2001: 500: f :: 1
+
+;; Query time: 363 msec
+;; SERVER: 198.41.0.4 # 53 (198.41.0.4)
+;; WHEN: Fri Jul 26 20:48:35 +03 2019
+;; MSG SIZE rcvd: 441
+
+
+
+TTL -> Time to Live responds in seconds.
+
+
+My Cache Server is the record in resolve.conf.
+root @ debian: ~ # cat /etc/resolv.conf
+nameserver 192.168.43.1
+
+
+Total is 13 Root servers.
+
+Multicast
+Unicast
+Broadcaster
+Anycast -> Lots of channels and ip addresses are the same, when we ask any of them, we get the fastest returning answer.
+
+DNSSEC
+It guarantees the correctness of the answers.
+Does not offer privacy
+
+dnscrypt
+
+ZSK- Zone Signing Key - >> ZONs sign Keys
+KSK- Key Signing Key - >> The keys sign the best for us
+
+
+
+
+
+
+DNS choice answer
+root @ debian: ~ # dig gentoo.org. @ 192.168.43.1 + multi + dnssec
+
+; << >> DiG 9.11.5-P4-5.1-Debian << >> gentoo.org. @ 192.168.43.1 + multi + dnssec
+;; global options: + cmd
+;; Got answer:
+;; - >> HEADER << - opcode: QUERY, status: NOERROR, id: 61518
+;; flags: qr rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+Meaning of flags:
+query response recursive desired recursive available autenticated data
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1280
+;; QUESTION SECTION:
+; Gentoo.org. IN A
+
+;; ANSWER SECTION:
+gentoo.org. 900 IN A 89.16.167.134
+gentoo.org. 900 IN RRSIG A 5 2 900 (
+                                20200119203218 20190723203218 52980 gentoo.org.
+                                eztcxilwnmokeej8ji9mjsrk8ctm7fhy9nyodxyp3hoy
+                                3faazhvfrmqg2uvcfxunızs865g1y + + dL fvp46zgynec
+                                dlpl4sk3zrvdt95fejgyddsbdsz + zh8bkfoodzcluqcv
+                                ywrvo5o3thv3dı1ikmkxwsopwnnfkıipvgewdlg A / 5CON
+                                XIjuPlxCTKsuJBjVBpUOkFMQepUuT77pn6Bfig ==)
+
+;; Query time: 964 msec
+;; SERVER:192.168.43.1 # 53 (192.168.43.1)
+;; WHEN: Fri Jul 26 21:27:05 +03 2019
+;; MSG SIZE rcvd: 257
+
+
+
+DNS Server Setup
+
+root @ debian: ~ # apt install bind9 bind9utils
+
+
+root @ debian: ~ # ln -s / etc / bind / etc / named -> We made soft link bind i made e soflink.
+
+root @ debian: ~ # vim /etc/bind/named.conf
+root @ debian: ~ # ln -s / etc / bind / etc / named
+root @ debian: ~ # vim /etc/bind/named.conf
+
+options
+local -> Usually done on this side local settings
+default-zones
