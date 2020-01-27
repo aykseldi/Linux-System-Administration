@@ -1,0 +1,100 @@
+BASH SCRIPTING
+  B A SH
+Bourne Again Shell
+
+There is an ordered structure in Bash Scripting.
+We can do everything we can write and call on the console with the script.
+We can run certain order sets without the need for compilation.
+
+
+#! / Bin / bash
+for i in {0..6}
+do
+currentday = $ (date +% A -d "+ $ i day")
+number of days = $ (date +% u -d "+ $ i day")
+echo -n $ gunname
+echo -n ""
+echo -n $ number of days
+echo -n ""
+        if [$ gunnumber -gt "5"]
+         than
+        echo -n "Holiday oley"
+        fi
+echo
+done
+exit
+
+Bash is a functional language. We can define functions.
+
+
+#! / bin / sh -> It's called a shebang, and tells the parent shell which interpreter should be used to execute the script
+
+0 - stdin
+1 - stdout
+2 - stderr
+
+
+[aty @ ldap ~] $ cp gunler.sh trial1.sh
+[aty @ ldap ~] $ echo $? -> Shows the last running program error command (end).
+0
+
+[aty @ ldap ~] $ ospdlfşg
+-bash: ospdlfşg: command not found
+[aty @ ldap ~] $ echo $?
+127
+
+[aty @ ldap ~] $ ls / aw
+ls: cannot access / aw: No such file or directory
+[aty @ ldap ~] $ echo $?
+2nd
+set command
+ -n -> Read commands but do not execute them. This may be
+                      used to check a shell script for syntax errors. this
+                      is ignored by interactive shells.
+ -t Exit after reading and executing one command.
+ -x After expanding each simple command, for command, case
+                      command, select command, or arithmetic for command,
+                      display the expanded value of PS4, followed by the com‐
+                      mand and its expanded arguments or associated word
+                      list.
+
+declare -a service_list = ("httpd", "mysqld") -> Array definition
+
+for i in "$ {service_list [@]}" -> All
+
+spid = $ (command) -> Assigns the output of the command to the variable
+spid = $ (pgrep -x $ i)
+if [[-z $ spid]] ---> Using double brackets ensures that if in bash is not executed, there is no error.
+-> - Why is the z parameter?
+ -z string
+              True if the length of string is zero.
+
+set -n
+
+Is BACKUP_ = '/ srv / backup'
+BACKUP_SERV = '/ srv / backup'
+BACKUP_SERV_PORT = '22 '
+
+die () {
+
+echo "$ *"> & 2
+exit 234
+}
+
+warn () {
+
+echo "$ *"> & 1
+
+}
+
+mkdir $ db_backup_dir || die "die"
+
+mkdir $ db_backup_dir && die "die"
+
+cp -a -> Copying all subdirectories, ownership and links of the directory
+
+-> When linking, absolute path must be specified.
+
+The $ 0 variable is a variable that represents that file itself.
+$ 1 $ 2 .... -> the parameter we sent in the shell
+$ * ---> shows all parameters
