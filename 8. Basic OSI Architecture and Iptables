@@ -1,0 +1,303 @@
+OSI LAYERS
+Application Data is sent to the end user or other applications.
+Makes Presentation Format Conversion
+Session Identification (such as bringing us other information if we enter a password on the debit card)
+Transport Data transmission TCP, UDP Port
+Network IP Addressing Ipv4, ICMP (Messaging and control)
+Data / Connection Digital Ethernet Address Arp (MAC address)
+Physical Analogue
+
+The http protocol is a text based protocol. So how do we carry things like video, audio (binary) from the text-based protocol? ---> It is necessary to convert Binary format to text format.
+
+  Harp and Rarp
+Rarp - >>> Matches Mac addresses and IP addresses.
+Arp - >> Matches the MAc address from the ip address.
+
+The ip address with the harp is known, it is the learning of the Mac address of this device to communicate.
+
+  Ipv4 Structure
+A 32-bit addressing can be done.
+It is divided into 4 8-bit pieces.
+
+0.0.0.0 - 255.255.255.255
+In total, 2 are 32 addressable machines, of which 0.0.0.0 and 255.255.255.255 cannot be given to devices.
+
+For example, to give 192.168.1.0 ip address to a machine, you need to look at the subnet mask. Here, if the subnet mask / 23 can be given to the machine.
+
+8 bit || 8 bit || 8 bit || 8-bit IP address 192.168.1.0
+8 bit || 8 bit || 8 bit || 8 bit Subnet Mask -> 255.255.254.0
+
+Or 192.168.1.0/23 notation as CIDR
+
+    A, B, C, D Class Ip Blocks
+Classes A, B, and C are reserved for use as Multicast.
+
+0.x.x.x.x.x.x.x -> Group A IP address with a beginning between 0 and 126
+1.0.x.x.x.x.x.x -> Group B ip address is between 128 and 191
+1.1.0.x.x.x.x.x -> C group ip address start group 192 to 223
+1.1.1.0.x.x.x.x -> Group D class ip address between 224 and 239
+1.1.1.0.x.x.x.x -> E class ip address between 240 and 247
+
+
+  NAT Structure
+What happens in public media is one IP address
+In private environment, we can use the IPs we want.
+But for private environments
+10.0.0..0 / 8 from Class A
+Class B 172.16.0.0/12
+192.168.0.0/16 from C class
+127.0.0.0/8 from class D
+
+127.0.0.1 Loopback Ip
+
+169.254.0.0/16 APIPA - >> The machine can receive an Ip from block 169.254.0.0/16 from Dhcp or because it could not get an Ip in some way. He can do this job over Rarp.
+
+  ICMP (Internet Control Message Protocol)
+
+Ping command is used.
+It does not contain any data types.
+Type and Codes are found.
+
+Type 3 = Destitnaton Unreachable
+Code 8 = Port Unreachable
+Code 9 = Host unreachabe
+Type 8 = Echo -> Ping
+Type 11 = Time Exceeded
+
+
+  Ip Header Format
+
+Total Length -> Total size information of the package
+IHL (Header Length) -> Header size information
+Type of Service ->
+Identification -> Identification of the package
+Fragment offset -> If the network to be transmitted does not meet the size of the data to be transmitted, it must be divided into pieces. On this basis, the package is divided into parts.
+Time to Live -> If any error occurs, ttl value is entered so that the packet will not be on the network forever. This value is checked at each hop point.
+Protocol -> TCP UDP information
+Chechksum -> Check if the package is broken
+
+
+Ethernet
+IPv4
+TCP / UDP
+Data
+
+  UDP
+Source port - Destitnaton Port
+Length - Chechksum
+
+The important thing is speed.
+Firewall is off
+Package is delivered
+1. can answer
+2. No answer
+Port closed udp packet not received.
+ICMP port sends unreachable.
+
+  TCP
+
+1. ---> SYN ----> 2
+1. <--- SYN + ACK <---- 2
+1. ---> ACK ----> 2
+
+Rst -> Sends ACK or RST without sending SYN.
+
+Firewall
+It performs permit or prohibition work based on IP and Port.
+Client -> Router / Firewall ---> Server
+  An Example Application
+192.168.5.0/30
+IP addresses that can be given as 0,1,2,3
+Server 192.168.5.1
+Router 192.168.5.2
+172.16.16.4/30
+4,5,6,7 threads that can be given
+Router 172.16.16.5
+Client 172.16.16.4
+
+netstat -lntup ---> Which ports is listening
+nc 192.168.5.1 80 -v -> Connects port 80 on the opposite side from the router to the server
+nc -l -p 80
+nc -u 192.168.5.2 80 -v
+route -n
+netstat -r
+ 
+ Kernel IP routing table
+Destination Gateway Genmask Flags Metric Ref Use Iface
+0.0.0.0 10.0.3.2 0.0.0.0 UG 0 0 0 enp0s8
+0.0.0.0 10.0.3.2 0.0.0.0 UG 101 0 0 enp0s8
+10.0.3.0 0.0.0.0 255.255.255.0 U 101 0 0 enp0s8
+192.168.5.0 0.0.0.0 255.255.255.252 U 0 0 0 enp0s3
+[aty @ centos7 ~] $
+
+Shows the ROUTE table.
+
+[aty @ centos7 ~] $ sudo route -n
+Kernel IP routing table
+Destination Gateway Genmask Flags Metric Ref Use Iface
+0.0.0.0 10.0.3.2 0.0.0.0 UG 0 0 0 enp0s8
+0.0.0.0 10.0.3.2 0.0.0.0 UG 101 0 0 enp0s8
+10.0.3.0 0.0.0.0 255.255.255.0 U 101 0 0 enp0s8
+192.168.5.0 0.0.0.0 255.255.255.252 U 0 00 enp0s3
+[aty@centos7 ~]$ ping 172.16.16.6 -c 1
+PING 172.16.16.6 (172.16.16.6) 56(84) bytes of data.
+
+--- 172.16.16.6 ping statistics ---
+1 packets transmitted, 0 received, 100% packet loss, time 0ms
+
+
+Biz 172.16.16.6 adresine gitmek için aşağıdaki route ekledik.
+
+
+[aty@centos7 ~]$ route add -net 172.16.16.4/30 dev enp0s3 gw 192.168.5.2
+SIOCADDRT: Operation not permitted
+[aty@centos7 ~]$ sudo route add -net 172.16.16.4/30 dev enp0s3 gw 192.168.5.2[
+
+Route ekledikten sonra ping attık.
+
+[aty@centos7 ~]$ ping 172.16.16.6 -c 1
+PING 172.16.16.6 (172.16.16.6) 56(84) bytes of data.
+
+--- 172.16.16.6 ping statistics ---
+1 packets transmitted, 0 received, 100% packet loss, time 0ms
+
+
+Client tarafına şidi ping gönderiryoruz.
+[aty@centos7 ~]$ ping 172.16.16.5 -c 1
+PING 172.16.16.5 (172.16.16.5) 56(84) bytes of data.
+
+--- 172.16.16.5 ping statistics ---
+1 packets transmitted, 0 received, 100% packet loss, time 0ms
+
+
+İP forwarding
+root@debian:~# cat /proc/sys/net/ipv4/ip_forward
+0
+
+IPTABLES
+Netfilter modulünü yönetmek için kullanılan bir tooldur.
+Table
+Mangle -->Düzenleme (TTL değiştirme, Quality Of Service QoS değiştirme
+Nat --> Adresleme
+Filter --Filtreleme (Accept, Deny, Drop )
+
+Chain --> Prerouting - Input - Output - Forward - PostRouting
+
+root@debian:~# iptables -L
+Chain INPUT (policy ACCEPT)
+target prot opt source destination
+
+Chain FORWARD (policy ACCEPT)
+target prot opt source destination
+
+Chain OUTPUT (policy ACCEPT)
+target prot opt source destination
+
+Eğer kuralı yazarken tablo belirtmezsek Iptables default olarak filter tablosuna yazar.
+
+
+root@debian:~# iptables -L -n -t nat
+Chain PREROUTING (policy ACCEPT)
+target prot opt source destination
+
+Chain INPUT (policy ACCEPT)
+target prot opt source destination
+
+Chain POSTROUTING (policy ACCEPT)
+target prot opt source destination
+
+Chain OUTPUT (policy ACCEPT)
+target prot opt source destination
+
+
+
+root@debian:~# iptables -L -n -t mangle
+Chain PREROUTING (policy ACCEPT)
+target prot opt source destination
+
+Chain INPUT (policy ACCEPT)
+target prot opt source destination
+
+Chain FORWARD (policy ACCEPT)
+target prot opt source destination
+
+Chain OUTPUT (policy ACCEPT)
+target prot opt source destination
+
+Chain POSTROUTING (policy ACCEPT)
+target prot opt source destination
+root@debian:~#
+
+
+Her tablonun içindeki zincirlerin ön tanımlı bir politikası vardır.
+
+Filter tablosuna yeni bir chain ekleme:
+root@debian:~# iptables -N yenichain -t filter
+root@debian:~# iptables -L -n -t filter
+Chain INPUT (policy ACCEPT)
+target prot opt source destination
+
+Chain FORWARD (policy ACCEPT)
+target prot opt source destination
+
+Chain OUTPUT (policy ACCEPT)
+target prot opt source destination
+
+Chain yenichain (0 references)
+target prot opt source destination
+
+
+Yeni chain eklediğimizde, bu chaini akışın içine dahil etmemeiz gerekiyor. Yoksa bu akış içerisinde olmadığı için chain uygulanmaz. Akış yukarıdan aşağıya ekler.
+
+Kural eşleşmesş yakaladğı anda paket ile ilgili yapılması gereken işlem ne ise o yapılır.
+
+iptables -A --> Append
+-I
+
+iptables -A INPUT --source 192.168.5.1 -p icmp --help
+
+iptables -A INPUT --source 192.168.5.1 -p icmp -j DROP
+root@debian:~# iptables -L -nv
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+pkts bytes target prot opt in out source destination
+0 0 DROP icmp -- * * 192.168.5.1 0.0.0.0/0
+
+Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
+pkts bytes target prot opt in out source destination
+
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+pkts bytes target prot opt in out source destination
+
+Chain yenichain (0 references)
+pkts bytes target prot opt in out source destination
+
+Server dan client a ping atabiliyoruz...Router ın forward etmesinin engellemek için FORWARD a kuralı girmek lazım
+[aty@centos7 ~]$ ping 172.16.16.5 -c 1
+PING 172.16.16.5 (172.16.16.5) 56(84) bytes of data.
+64 bytes from 172.16.16.5: icmp_seq=1 ttl=63 time=0.556 ms
+
+--- 172.16.16.5 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.556/0.556/0.556/0.000 ms
+
+
+Kuralı silme
+İlk önce numberını bul
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+num pkts bytes target prot opt in out source destination
+1 1 84 DROP icmp -- * * 192.168.5.1 0.0.0.0/0
+
+Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
+num pkts bytes target prot opt in out source destination
+
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+num pkts bytes target prot opt in out source destination
+
+Chain yenichain (0 references)
+num pkts bytes target prot opt in out source destination
+
+root @ debian: ~ # iptables -D INPUT 1
+
+
+HERE After the package is accepted by the router, we wrote the router's rope here because it will print out again.
+root @ debian: ~ # iptables -A OUTPUT --source 192.168.5.2 -p icmp -j DROP
