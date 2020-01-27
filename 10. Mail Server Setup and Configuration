@@ -1,0 +1,377 @@
+HOW MAIL SERVER WORKS
+Ayşe client -----------------------------> ayse@abc.com.tr
+SMTP SMTPS email server does some checks
+
+mail.abc.com.tr ------------------------> DNS
+
+mail.abc.com.tr ------------------------> posta.xyz.ed.tr
+SMTP SMTPS
+
+DNS <------------------------ posta.xyz.ed.tr
+SPF checks (Reverse proxy checks, singular threads for abc.com.tr)
+
+
+posta.xyz.ed.tr ---------------------> RBL control (Black or not is checking it)
+
+posta.xyz.ed.tr -> Gray checks the list, is it a robot or not, go 2 min. come later.
+Are you really a mail server or a bot? 69
+
+posta.xyz.ed.tr -> Header checks, time, sender information, etc.
+posta.xyz.ed.tr -> Body check, content information control, word control etc.
+posta.xyz.ed.tr -> Makes content security,
+Anti spam - used to analyze email and give rating points. Span looks assassin, DSS looks, Radon looks
+Accordingly, it thinks that it is spam, manipulates the subject and delivers it to the user.
+Anti virus - But if there is a virus in the mail, it can drop directly.
+
+Mail is then sent to the user's home file, but the user's outlook has not yet been dropped.
+
+Then when I say send to the user via outlook, outlook a POP3, IMAP protocols mail drops.
+
+
+In the IMAP protocol, the mails stop on the server. In this way, it works synchronously with the mail server.
+
+If using IMAP, for example, the incoming mail is received from both mobile phone and ipad at the same time.
+
+When we use IMAP and send an e-mail with Ipada, for example, we can use Outlook server to drop the items on our mobile phone.
+must be set to sync.
+
+
+DKIM -> Send the public key to the server on the other party, sign it with its private key and send it.
+
+DMARC
+RBL
+SPF
+Email Server
+
+POSTFIX smtp, MTA
+DOVECOT imap, pop3, lmtp (s)
+AMAVISD-NEW virus and spam analysis
+
+Email sent ------------> Postfix ---------------> DOVECOT
+|
+|
+|
+|
+Client
+
+When sending eMAIL, you can contact directly with postfix. Postfix sends the email and sends a copy of the dovecot.
+
+To run a mail server
+1. Having FQDN Fully Qualified Domain Name
+2. To be able to connect from the 25th port to the outside.
+3. Having the right time. The timing server is important
+4. Syslog -> It needs to be a logging system.
+
+rsyslog configuration
+vim /etc/rsyslogd/xxx.conf
+mail. * - / var / log / mail.log / mail -> - it enables the service to continue without writing to disk and the operating system to write a tooth in the next euphrates. In systems that produce multiple logs, it can wait for the write service to disk.
+
+auth, authpriv. * /var/log/auth.log
+4. Must have MX record
+5. A record
+6. Reverse proxy registration should be available.
+
+
+E-mail
+header
+BODY
+
+attachment header
+attachment body
+
+SMTP -> You accept the mail or reject it completely.
+LMTP -> I send mail from one person to three. It can accept or reject the difference from SMTP on a person basis. Used when sending mail from LMTP postfix to Dovecat. In this way, person / accept / deny can be done. SMTP is used when sending mail via internet.
+
+SMTP is a half duplex prtole. He tells himself, he listens against him, he tells him against him.
+
+
+
+
+
+
+
+
+
+
+
+POST FIX INSTALLATION
+
+root @ server: ~ # apt-get install postfix
+
+Installation files are located here.
+
+root @ server: ~ # ls -l / etc / postfix /
+120 total
+-rw-r - r-- 1 root root 60 Jul 27 20:38 dynamicmaps.cf
+drwxr-xr-x 2 root root 4096 Apr 1 20:27 dynamicmaps.cf.d
+-rw-r - r-- 1 root root 1463 Jul 27 20:38 main.cf
+-rw-r - r-- 1 root root 27 129 Jul 27 20:38 main.cf.proto
+lrwxrwxrwx 1 root root 31 Jul 27 20:38 makedefs.out -> /usr/share/postfix/makedefs.out
+-rw-r - r-- 1 root root 6208 Jul 27 20:38 master.cf
+-rw-r - r-- 1 root root 6208 Jul 27 20:38 master.cf.proto
+-rw-r - r-- 1 root root 10268 Apr 1 20:27 postfix-files
+drwxr-xr-x 2 root root 4096 Apr 1 20:27 postfix-files.d
+-rwxr-xr-x 1 root root 11532 Apr 1 20:27 postfix-script
+-rwxr-xr-x 1 root root 29872 Apr 1 20:27 post-install
+drwxr-xr-x 2 root root 4096 Apr 1 20:27 sasl
+
+
+
+
+
+We will change the settings in the following 2 files.
+-rw-r - r-- 1 root root 6208 Jul 27 20:38 master.cf
+-rw-r - r-- 1 root root 1463 Jul 27 20:38 main.cf
+
+
+http://www.postfix.org/standard_confıguratıon_readme.html
+
+
+Postfix on a stand-alone Internet host -> Can send and receive mail on the Internet side.
+Postfix on a null client -> Sends only mail, not receiving mail, for example, servers can be installed.
+Postfix on a local network -> We send mail in the local network, we cannot send mail by the internet.
+Postfix email firewall / gateway -> is set up to set up postfix in front of the exchange and to check postfix e-mail.
+
+We
+
+
+/etc/postfix/main.cf:
+    # Optional: send mail as user @ domainname instead of user @ hostname.
+    #myorigin = $ mydomain -> Throws the part up to the first point in myhostname and the rest becomes my origin.
+myhostname = lkd.linux.org
+The mydomain parameter was automatically linux.org.
+
+    # Optional: specify NAT / proxy external address.
+    #proxy_interfaces = 1.2.3.4 -> There may be firewall out there, and firewall can be real ip and postfix lcal ip. In this case, postfix will need real ip.
+
+    # Alternative 1: don't relay mail from other hosts.
+    mynetworks_style = host
+    relay_domains =
+
+    # Alternative 2: relay mail from local clients only. -> Responds to sending mail from clients. It allows you to send mail from the following network.
+    # mynetworks = 192.168.1.0/28
+    # relay_domains =
+
+smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
+myhostname = lkd.linux.org
+alias_maps = hash: / etc / aliases
+alias_database = hash: / etc / aliases
+mydestination = $ myhostname, localdomain, localhost, localhost.localdomain, localhost, $ mydomain -> previously only accept eraya@lkd.a21an.org.
+relayhost = -> For example, we will send mail to gmail, instead of sending it directly to gmail, send it to another place.
+mynetworks = 192.168.1.0/24 -> which ip blocks can send mail without giving username password.
+mailbox_size_limit = 0
+recipient_delimiter = + -> eraya+linux@linux.org.tr does not consider after + here and goes directly to araya@linux.org.tr. Here, with the + we ensure that the incoming mails fall into the linux folder, not directly.
+inet_interfaces = all -> Where should I listen? Listen from all sides. Loopback only said that no one can send an email because the port 25 only listens to localhost.
+inet_protocols = all
+
+################################################## ####################
+A sample mail sending event
+
+root @ server: / etc / postfix # telnet localhost 25
+Trying :: 1 ...
+Connected to localhost.
+Escape character is '^]'.
+220 lkd.linux.org ESMTP Postfix (Debian / GNU)
+ehlo localhost
+250-lkd.linux.org
+250-PIPELINING
+250-SIZE 10240000
+250-VRFY
+250-etrn
+250-STARTTLS
+250-ENHANCEDSTATUSCODES
+250-8BITMI to
+250-DSN
+250-SMTPUTF8
+250 CHUNKING
+mail from: <>
+250 2.1.0 Ok
+rcpt to: <root@lkd.linux.org>
+rcpt to: <aty@lkd.linux.org>
+
+rcpt to: <erayaslan@gmail.com>
+250 2.1.5 Ok
+data
+354 End data with <CR><LF>.<CR> <LF>
+Subject: Test
+From: Bill Gates <bill.ms.com>
+Hello, Ali
+.
+250 2.0.0 Arrow: queued as A971EF00904
+quit
+221 2.0.0 Bye
+Connection closed by foreign host.
+
+
+Content of the mail
+
+You have mail in / var / mail / root
+root @ server: / etc / postfix # ls / var / mail / root
+/ Var / mail / root
+root @ server: / etc / postfix # ls -la / var / mail / root
+-rw ------- 1 root mail 463 Jul 27 22:15 / var / mail / root
+root @ server: / etc / postfix # more / var / mail / root
+From MAILER-DAEMON Sat Jul 27 22:15:38 2019
+Return-Path: <>
+X-Original-To: root@lkd.linux.org
+Delivered-To: root@lkd.linux.org
+Received: from localhost (localhost [IPv6 ::: 1])
+        by lkd.linux.org (Postfix) with ESMTP id A971EF00904
+        for <root@lkd.linux.org>; Sat, 27 Jul 2019 22:14:18 +0300 (+03)
+Subject: Test
+From: Bill Gates <bill.ms.com@linux.org>
+Message-Id: <20190727191425.A971EF00904@lkd.linux.org>
+Date: Sat, 27 Jul 2019 22:14:18 +0300 (+03)
+
+Hello, Ali
+
+
+Shows mail in queue
+root @ server: / etc / postfix # mailq
+Mail queue is empty
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+root @ server: / etc / postfix # postfix reload
+postfix / postfix-script: refreshing the Postfix mail system
+
+
+DOVECOTE
+Dovecot is to show us the mails registered in Postfix with IMAP, POP3. Supports Dovecot LMTP. So you can send it to different people and some of them can accept deny.
+
+
+Dovecot Installation
+
+root @ server: / etc / postfix # apt-cache search dovecot
+argonaut-dovecot - Argonaut (client-module for dovecot)
+ciderwebmail - IMAP webmail service
+dovecot-auth-lua - secure POP3 / IMAP server - Lua authentication plugin
+dovecot-core - secure POP3 / IMAP server - core files
+dovecot-dev - secure POP3 / IMAP server - header files
+dovecot-gssapi - secure POP3 / IMAP server - GSSAPI support
+dovecot-imapd - secure POP3 / IMAP server - IMAP daemon
+dovecot-ldap - secure POP3 / IMAP server - LDAP support
+dovecot-lmtpd - secure POP3 / IMAP server - LMTP server
+dovecot-lucene - secure POP3 / IMAP server - Lucene support
+dovecot-managesieved - secure POP3 / IMAP server - ManageSieve server
+dovecot-mysql - secure POP3 / IMAP server - MySQL support
+dovecot-pgsql - secure POP3 / IMAP server - PostgreSQL support
+dovecot-pop3d - secure POP3 / IMAP server - POP3 daemon
+dovecot-sieve - secure POP3 / IMAP server - Sieve filters support -> Provides users with additional rules.
+dovecot-solr - secure POP3 / IMAP server - Solr support
+dovecot-sqlite - secure POP3 / IMAP server - SQLite support
+dovecot-submissiond - secure POP3 / IMAP server - mail submission agent
+dovecot-antispam - Dovecot plugins for training spam filters
+
+
+We will install 2 ğpackage. dovecot-imapd and dovecot-lmtpd-imapd dovecot-lmtpd
+Reading package lists ... Done
+Building dependency tree
+
+
+
+etc / dovecot / conf.d / 10-mail.conf
+
+mail_location = maildir: ~ / .mail.dir -> Mbox, mail, these are mail retention formats. We want to keep it in a mail format. With this mail location, when dovecot gets up, we show you where the mails are.
+
+Which user I will use the service created in his home directory as follows:
+root @ server: ~ # mkdir ./maildir
+
+We made the following changes.
+vim /etc/dovecot/conf.d/10-master.conf
+
+
+service lmtp {
+  unix_listener lmtp / var / spool / postfix / private / dovecot-lmtp {
+group = postfix
+mode = 0660
+user = postfix
+    #mode = 0666
+  }
+---- >>>> We removed the comment line below and added a few more lines.
+  # Postfix smtp-auth
+  unix_listener / var / spool / postfix / private / auth {
+    group = postfix
+mode = 0666
+user = postfix
+  #}
+  
+  
+  vim /etc/dovecot/conf.d/10-auth.conf
+
+  auth_mechanism = plain_login
+  
+  !! include auth-passwdfile.conf.ext
+   
+  We have changed other places as below, commented.
+   vim /etc/dovecot/conf.d/auth-passwdfile.conf.ext
+  passdb {
+  driver = passwd-file
+  arg = schema = PLAIN username_format =% Ln / etc / dovecot / users
+  }
+
+We created users file and gave passwords
+root @ server: /etc/dovecot/conf.d# vim / etc / dovecot / users
+root: {PLAIN} 123: 1: 1: Root Owner: / home / root / ::
+aty: {PLAIN} 123: 1001: 1001: ali taha: / home / aty / ::
+
+
+
+root @ server: /etc/dovecot/conf.d# systemctl restart dovecot
+root @ server: /etc/dovecot/conf.d# systemctl status dovecot
+● dovecot.service - Dovecot IMAP / POP3 email server
+   Loaded: loaded (/lib/systemd/system/dovecot.service; enabled; vendor prese
+   Active: active (running) since Sun 2019-07-28 00:24:37 +03; 10s ago
+     Docs: man: dovecot (1)
+           http://wiki2.dovecot.org/
+ Main PID: 9888 (dovecot)
+    Tasks: 4 (limit: 1150)
+   Memory: 3.3M
+   CGroup: /system.slice/dovecot.service
+           ├─9888 / usr / sbin / dovecot -F
+           ├─9889 dovecot / anvil
+           ├─9890 dovecot / log
+           └─9891 dovecot / config
+
+Jul 28 00:24:37 server systemd [1]: Started Dovecot IMAP / POP3 email server.
+Jul 28 00:24:39 server dovecot [9888]: master: Dovecot v2.3.4.1 (f79e8e7e4) st:
+
+We logged in to Dovecot from port 143.
+telnet 127.0.0.1 143
+
+a01 login aty 123
+
+a01 OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE SORT SORT = DISPLAY THREAD = REFERENCES THREAD = REFS THREAD = ORDEREDSUBJECT MULTIAPPEND URL-PARTIAL CATENATE UNSELECT CHILDREN NAMESPACE UIDPLUS EQUIPMENT SEARCH LIST-STATUS BINARY MOVE SNIPPET = FUZZY LITERAL + NOTIFY SPECIAL-USE] Logged in
+
+
+a02 list "" "*"
+* LIST (\ HasNoChildren) "." INBOX -> Only inbox folder. No cents.
+a02 OK List completed (0.001 + 0.000 secs).
+a01 logout
+
+
+
+Main.cf for Postfix to recognize dovecot
+root @ server: /etc/dovecot/conf.d# vim /etc/postfix/main.cf
+will be compatible with local_transport = lmtp: unix: private / dovecot-lmtp ---> / etc / dovecot / conf.d / 10-master.conf
+smtpd_sasl_auth_enable = yes -> make autentication
+smtpd_sasl_path = private / auth -> Use private auth
+smtpd_sasl_type = dovecot - <We left the login job to dovecot. Dovecot will ask over private / auth socket when logged in with these settings
+smtpd_tls_auth_only = yes -> tls only accepts autentication. Other security measures taken
+
+
+
+root @ server: /etc/dovecot/conf.d# sudo apt-get install mailutils
+root @ server: /etc/dovecot/conf.d# date | mail -s test5 root@lkd.linux.org
+root @ server: / etc / postfix # apt-get install dovecot
