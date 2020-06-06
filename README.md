@@ -1,3 +1,7 @@
 # Linux-System-Administration
-Linux System Administration Notes
-These note are created in Turkish beforehand and now I am able to translate my notes into English for the good of other IT people.
+
+
+* ![Basic Networking on Virtual Machines](https://github.com/aykseldi/Linux-System-Administration/blob/master/01.%20Basic%20Networking%20in%20Virtual%20Machines.md)
+
+
+* * ![BHardware Virtualization](https://github.com/aykseldi/Linux-System-Administration/blob/master/2.%20Hardware%20Virtualization.md)
