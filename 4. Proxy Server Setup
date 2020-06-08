@@ -1,14 +1,8 @@
-Proxy Server
-
-dhcp
-
-Proxy
+# Proxy Server
 
 
-10.10.10.0/24
 
-Proxy
-Proxy runs on port 3128.
+Proxy server runs on port 3128.
 Normal or transparent proxy can cache traffic going through port 80. Because it is encrypted with ssl, it cannot cach the data, that is, it cannot make sense of the data.
 Filtering at layer 7 level can be done with proxy.
 
